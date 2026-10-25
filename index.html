@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#134a32">
+<title>Play</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='2' width='60' height='60' rx='8' fill='%231f6b4a'/%3E%3Crect x='10' y='10' width='44' height='44' rx='3' fill='%23f3ead3'/%3E%3Crect x='10' y='10' width='44' height='9' fill='%23e02b2b'/%3E%3Ccircle cx='32' cy='36' r='9' fill='%23ffcc33'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css">
+<style>
+  html, body { margin: 0; min-height: 100%; background: #0b2a1f; color: #fff; font-family: var(--text); -webkit-tap-highlight-color: transparent; }
+  body { background: radial-gradient(ellipse 120% 60% at 50% 0%, #1f6b4a 0%, #134a32 45%, #0b2a1f 100%) fixed; }
+  * { box-sizing: border-box; }
+  button { font-family: inherit; }
+  .view { display: none; min-height: var(--vh, 100vh); padding: max(10px, env(safe-area-inset-top)) 12px max(18px, env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; }
+  .view.on { display: block; animation: vIn .3s ease-out; }
+  @keyframes vIn { from { opacity: 0; transform: translateY(12px); } }
+  .disp { font-family: var(--display); font-weight: 400; letter-spacing: .04em; }
+
+  /* ---- join ---- */
+  .j-wrap { padding-top: 6vh; display: flex; flex-direction: column; align-items: center; }
+  .j-logo { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .j-logo .mk { width: 100px; height: 100px; filter: drop-shadow(0 8px 16px #000a); }
+  .j-logo b { font: 400 44px/1 var(--display); letter-spacing: .04em; text-shadow: 0 3px 0 #c98a06, 0 5px 0 #6b3d00; -webkit-text-stroke: 1.5px #3a1700; paint-order: stroke fill; text-align: center; }
+  .j-card { width: 100%; background: #0f3d2acc; border-radius: 22px; padding: 18px 18px 14px; box-shadow: 0 0 0 3px #ffcc33, 0 18px 40px #0009; }
+  .j-card label { display: flex; justify-content: space-between; font: 700 13px var(--text); letter-spacing: .08em; color: #cfe6d8; margin: 8px 2px 6px; }
+  .j-card label span:last-child { color: #8fc4a9; font-weight: 600; letter-spacing: 0; }
+  .j-card input { width: 100%; font: 800 26px var(--letter); text-transform: uppercase; letter-spacing: .06em; color: #111; background: #fff; border: 0; border-radius: 12px; padding: 12px 14px; outline: none; box-shadow: inset 0 -3px 0 #0002; }
+  .j-card input#code { letter-spacing: .4em; text-align: center; font-size: 34px; }
+  .j-card input:focus { box-shadow: 0 0 0 3px var(--gold); }
+  .j-play { width: 100%; margin-top: 16px; font: 400 32px var(--display); letter-spacing: .06em; color: #2a1800; background: linear-gradient(#ffe27a, #f2b01e); border: 0; border-radius: 999px; padding: 14px 0 10px; box-shadow: 0 6px 0 #8a5200; opacity: .55; transition: opacity .2s, transform .08s; }
+  .j-play.ready { opacity: 1; }
+  .j-play:active, .j-play[data-fx-press] { transform: translateY(4px); box-shadow: 0 2px 0 #8a5200; }
+  .j-play.busy { animation: breathe 1.1s ease-in-out infinite; }
+  @keyframes breathe { 50% { opacity: .55; } }
+  #joinErr { color: #ffb4ae; font-weight: 700; min-height: 22px; margin: 12px 0 0; text-align: center; }
+  #joinWait { color: #cfe6d8; margin: 6px 0 0; text-align: center; font-size: 14px; }
+  .fine { color: #9ccbb1; font-size: 14px; text-align: center; line-height: 1.5; margin-top: 18px; }
+  .ver { color: #6fa98c; font-size: 12px; letter-spacing: .08em; margin-top: 10px; }
+  #deskTv { display: none; width: 100%; text-align: center; margin-bottom: 16px; }
+  #deskTv p { color: #cfe6d8; margin: 0 0 10px; }
+  #deskTv span { display: block; margin-top: 14px; font: 700 12px var(--text); letter-spacing: .12em; color: #8fc4a9; }
+  .tvbtn { display: inline-block; font: 400 24px var(--display); letter-spacing: .05em; color: #06301f; text-decoration: none; background: linear-gradient(#5ad39a, #2bbd6e); border-radius: 999px; padding: 12px 26px 9px; box-shadow: 0 5px 0 #11603a; }
+  @media (hover: hover) and (pointer: fine) { #deskTv { display: block; } .tvhint { display: none; } }
+  #join.hascode #deskTv { display: none; }
+
+  /* ---- shared bits ---- */
+  .bar { display: flex; justify-content: space-between; align-items: center; font: 700 13px var(--text); letter-spacing: .08em; color: #cfe6d8; padding: 4px 4px 10px; }
+  .bar b { color: #fff; }
+  .card { background: #0f3d2acc; border-radius: 18px; padding: 14px; margin-bottom: 12px; box-shadow: 0 10px 30px #0006, inset 0 1px 0 #ffffff22; }
+  .card.mine { box-shadow: 0 0 0 2px var(--gold), 0 10px 30px #0006; }
+  .card.bad { box-shadow: 0 0 0 2px var(--red), 0 10px 30px #0006; }
+  .card h3 { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 10px; font: 400 22px var(--display); letter-spacing: .06em; color: var(--gold); }
+  .card h3 small { font: 700 12px var(--text); letter-spacing: .08em; color: #9ccbb1; }
+  .who { display: flex; flex-wrap: wrap; gap: 6px; }
+  .who span { display: inline-flex; align-items: center; gap: 6px; font: 700 15px var(--text); padding: 6px 12px; border-radius: 999px; background: #ffffff14; }
+  .who span.me { background: var(--gold); color: #2a1800; }
+  .who span.off { opacity: .5; }
+  .who span i { width: 22px; height: 22px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center; font-style: normal; font-size: 13px; }
+  .who em { color: #9ccbb1; }
+  .btn { display: block; width: 100%; margin-top: 10px; font: 400 26px var(--display); letter-spacing: .05em; color: #06301f; background: linear-gradient(#5ad39a, #2bbd6e); border: 0; border-radius: 999px; padding: 13px 10px 10px; box-shadow: 0 5px 0 #11603a; transition: transform .08s, box-shadow .08s, opacity .2s; }
+  .btn:active:not(:disabled), .btn[data-fx-press]:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #11603a; }
+  .btn.gold { color: #2a1800; background: linear-gradient(#ffe27a, #f2b01e); box-shadow: 0 5px 0 #8a5200; }
+  .btn.red { color: #fff; background: linear-gradient(#ff6a60, #c41410); box-shadow: 0 5px 0 #5a0905; }
+  .btn.blue { color: #fff; background: linear-gradient(#5aa5ff, #2a6fd8); box-shadow: 0 5px 0 #143a80; }
+  .btn.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 2px #3d9a6f; }
+  .btn.sm { font-size: 19px; padding: 10px 8px 8px; }
+  .btn.big { font-size: 34px; padding: 18px 10px 13px; }
+  .btn:disabled { opacity: .4; }
+  .btn.glow { animation: glow 1.6s ease-in-out infinite; }
+  @keyframes glow { 50% { box-shadow: 0 5px 0 #8a5200, 0 0 30px #ffcc33aa; } }
+  .note { color: #cfe6d8; font-size: 14px; line-height: 1.45; margin: 10px 2px 0; text-align: center; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .row2 .btn, .row3 .btn { margin-top: 0; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .label { font: 700 12px var(--text); letter-spacing: .1em; color: #9ccbb1; margin: 12px 2px 4px; }
+  .pieces { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .pieces button { aspect-ratio: 1; border: 0; border-radius: 14px; font-size: 34px; background: #ffffff14; transition: transform .1s; }
+  .pieces button.on { background: var(--gold); box-shadow: 0 0 0 3px #fff; }
+  .pieces button:disabled { opacity: .3; }
+
+  /* ---- play ---- */
+  .top { display: flex; align-items: center; gap: 10px; padding: 2px 2px 10px; }
+  .top .tk { width: 44px; height: 44px; border-radius: 50%; flex: none; background: linear-gradient(var(--c1), var(--c2)); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 0 0 3px #fff3; }
+  .top .nm { font: 400 24px/1 var(--display); letter-spacing: .05em; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-top: 3px; }
+  .top .nm small { display: block; font: 700 12px var(--text); letter-spacing: .06em; color: #9ccbb1; margin-top: 3px; text-transform: none; }
+  .top .money { text-align: right; font: 800 28px/1 var(--letter); font-variant-numeric: tabular-nums; }
+  .top .money small { display: block; font: 700 11px var(--text); letter-spacing: .08em; color: #cfe6d8; margin-top: 3px; }
+  .say { text-align: center; padding: 10px 6px 6px; }
+  .say b { display: block; font: 400 34px/1.05 var(--display); letter-spacing: .04em; color: var(--gold); }
+  .say span { display: block; font: 600 15px/1.4 var(--text); color: #e3f3ea; margin-top: 6px; }
+  .say.good b { color: #7dffb8; } .say.bad b { color: #ff8a80; }
+  .clock { height: 8px; border-radius: 4px; background: #ffffff1f; overflow: hidden; margin: 8px 4px 0; }
+  .clock i { display: block; height: 100%; width: 100%; background: #fff; transform-origin: left; }
+  .clock.hot i { background: #ff6a60; }
+  .roll { display: block; width: min(68vw, 260px); aspect-ratio: 1; margin: 14px auto 8px; border-radius: 50%; border: 0; font: 400 52px var(--display); letter-spacing: .05em; color: #2a1800; background: radial-gradient(circle at 40% 30%, #fff3b0, #ffcc33 45%, #c98a06); box-shadow: 0 12px 0 #6b3d00, 0 0 0 8px #ffffff22, 0 24px 40px #0009; transition: transform .07s, box-shadow .07s; touch-action: manipulation; }
+  .roll:active, .roll[data-fx-press] { transform: translateY(9px); box-shadow: 0 3px 0 #6b3d00, 0 0 0 8px #ffffff22; }
+  .roll:disabled { filter: grayscale(.9) brightness(.6); }
+  .dice { display: flex; gap: 14px; justify-content: center; margin: 8px 0 2px; }
+  .die { width: 54px; height: 54px; border-radius: 12px; background: #fff; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 7px; box-shadow: 0 4px 0 #0004; }
+  .die i { border-radius: 50%; background: #1b1b1b; opacity: 0; margin: 2px; }
+  .die i.on { opacity: 1; }
+
+  /* a property card */
+  .deed { background: #fff; color: #1b1b1b; border-radius: 14px; overflow: hidden; margin: 6px 0 10px; box-shadow: 0 8px 20px #0006; }
+  .deed .hd { padding: 12px 14px 9px; text-align: center; font: 400 22px/1.1 var(--display); letter-spacing: .06em; }
+  .deed .hd small { display: block; font: 700 11px var(--text); letter-spacing: .14em; opacity: .85; margin-bottom: 3px; }
+  .deed table { width: 100%; border-collapse: collapse; font: 600 14px var(--text); }
+  .deed td { padding: 6px 14px; border-top: 1px solid #0001; }
+  .deed td:last-child { text-align: right; font-family: var(--letter); font-weight: 800; }
+  .deed tr.now td { background: #ffcc3355; }
+  .deed .ft { padding: 8px 14px 10px; font: 600 12px/1.4 var(--text); color: #555; text-align: center; border-top: 1px solid #0001; }
+
+  /* tabs */
+  .tabs { display: flex; gap: 6px; margin: 4px 0 10px; }
+  .tabs button { flex: 1; border: 0; border-radius: 10px; padding: 10px 4px; font: 700 14px var(--text); color: #fff; background: #ffffff1a; position: relative; }
+  .tabs button.on { background: var(--gold); color: #2a1800; }
+  .tabs button .n { position: absolute; top: -6px; right: -4px; background: var(--red); color: #fff; font: 800 11px var(--text); min-width: 20px; height: 20px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+  .prop { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #ffffff14; }
+  .prop:last-child { border-bottom: 0; }
+  .prop .sw { width: 16px; height: 34px; border-radius: 4px; flex: none; box-shadow: inset 0 0 0 1.5px #0b2a1f; }
+  .prop .sw.m { background-image: repeating-linear-gradient(45deg, #0b2a1f 0 3px, transparent 3px 6px) !important; }
+  .prop .in { flex: 1; min-width: 0; }
+  .prop .in b { display: block; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prop .in small { display: block; color: #9ccbb1; font-size: 12px; margin-top: 2px; }
+  .prop .bs { display: flex; gap: 5px; flex: none; }
+  .prop .bs button { border: 0; border-radius: 8px; background: #ffffff1f; color: #fff; font: 700 12px var(--text); padding: 8px 9px; white-space: nowrap; }
+  .prop .bs button.b { background: #2bbd6e; color: #06301f; }
+  .prop .bs button.dim { opacity: .35; }
+  .prop.pick { cursor: pointer; }
+  .prop.pick.on { background: #ffcc3322; border-radius: 10px; padding-left: 6px; padding-right: 6px; }
+  .houses { display: inline-flex; gap: 2px; vertical-align: middle; margin-left: 6px; }
+  .houses i { width: 10px; height: 10px; border-radius: 2px; background: #2fbd5e; }
+  .houses i.h { width: 22px; background: var(--red); }
+  .bids { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .bids .btn { margin-top: 0; font-size: 20px; }
+  .custom { display: flex; gap: 8px; margin-top: 10px; }
+  .custom input { flex: 1; min-width: 0; font: 800 20px var(--letter); color: #111; background: #fff; border: 0; border-radius: 12px; padding: 10px 12px; outline: none; }
+  .custom .btn { width: auto; margin: 0; padding: 10px 18px 8px; }
+  .cashIn { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .cashIn input { flex: 1; min-width: 0; font: 800 18px var(--letter); color: #111; background: #fff; border: 0; border-radius: 10px; padding: 9px 12px; outline: none; }
+  .cashIn span { font-weight: 700; color: #cfe6d8; font-size: 14px; }
+  .plist div { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #ffffff14; }
+  .plist div:last-child { border-bottom: 0; }
+  .plist .tk { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; flex: none; background: linear-gradient(var(--c1), var(--c2)); }
+  .plist .nm { flex: 1; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .plist .nm small { display: block; color: #9ccbb1; font-weight: 600; font-size: 12px; }
+  .plist .cash { font: 800 17px var(--letter); white-space: nowrap; }
+  .plist .cash small { display: block; font: 700 10px var(--text); letter-spacing: .06em; color: #9ccbb1; text-align: right; }
+  .chips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+  .chips i { width: 14px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px #0b2a1f; }
+  .chips i.m { opacity: .45; }
+  .chips i.rail { background: #222; } .chips i.util { background: #8a8f99; }
+  .logl div { font: 600 14px/1.4 var(--text); color: #cfe6d8; padding: 5px 0; border-bottom: 1px solid #ffffff0f; }
+  .logl div.rent, .logl div.tax, .logl div.debt, .logl div.bankrupt, .logl div.jail { color: #ffb4ae; } .logl div.buy, .logl div.go, .logl div.pay { color: #a9f0c5; } .logl div.card { color: #ffd98a; } .logl div.trade { color: #9fd3ff; }
+  .cardtext { background: #fff; color: #1b1b1b; border-radius: 14px; padding: 14px; font: 700 16px/1.4 var(--text); text-align: center; margin: 8px 0 4px; }
+  .cardtext small { display: block; font: 400 18px var(--display); letter-spacing: .14em; margin-bottom: 6px; }
+  .cardtext.chance small { color: #e07b10; } .cardtext.chest small { color: #2a8fd8; }
+  .ranks div { display: flex; justify-content: space-between; padding: 8px 2px; border-bottom: 1px solid #ffffff14; font-weight: 700; }
+  .ranks div b { font-family: var(--letter); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .stats div { background: #ffffff10; border-radius: 12px; padding: 10px 6px; text-align: center; font: 700 11px var(--text); letter-spacing: .06em; color: #cfe6d8; }
+  .stats div b { display: block; font: 400 24px var(--display); color: #fff; letter-spacing: .02em; margin-bottom: 2px; }
+  .award { display: inline-block; font: 700 12px var(--text); letter-spacing: .06em; background: var(--gold); color: #2a1800; border-radius: 999px; padding: 4px 10px; margin: 0 4px 4px 0; }
+  .side { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .side h4 { margin: 0 0 4px; font: 700 12px var(--text); letter-spacing: .1em; color: #9ccbb1; }
+  .side ul { margin: 0; padding: 0 0 0 14px; font-size: 14px; line-height: 1.45; }
+  .side ul li { list-style: disc; }
+
+  #pop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 50; pointer-events: none; }
+  #pop.on { display: flex; }
+  #pop > div { padding: 22px 28px 18px; border-radius: 24px; text-align: center; animation: popIn .32s cubic-bezier(.2, 1.4, .4, 1); max-width: 88vw; }
+  #pop.out > div { animation: popOut .25s ease-in forwards; }
+  @keyframes popIn { from { transform: scale(.3); opacity: 0; } }
+  @keyframes popOut { to { transform: scale(.8); opacity: 0; } }
+  #pop b { display: block; font: 400 44px/1 var(--display); letter-spacing: .03em; }
+  #pop span { display: block; font: 700 16px var(--text); margin-top: 6px; }
+  #pop.good > div { color: #06301f; background: linear-gradient(#7dffb8, #2bbd6e); box-shadow: 0 0 0 5px #fff, 0 20px 50px #000c; }
+  #pop.bad > div { color: #fff; background: linear-gradient(#333, #000); box-shadow: 0 0 0 5px var(--red), 0 20px 50px #000c; }
+  #pop.turn > div { color: #2a1800; background: linear-gradient(#ffe27a, #f2b01e); box-shadow: 0 0 0 5px #fff, 0 20px 50px #000c; }
+  #toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0b2a1f; color: #fff; font-weight: 700; font-size: 15px; padding: 10px 18px; border-radius: 999px; box-shadow: 0 0 0 2px var(--gold), 0 10px 30px #000a; z-index: 60; display: none; max-width: 92vw; text-align: center; }
+  #toast.on { display: block; animation: popIn .25s ease-out; }
+  #toast.out { animation: popOut .2s ease-in forwards; }
+  #offline { position: fixed; left: 50%; top: max(8px, env(safe-area-inset-top)); transform: translateX(-50%); background: #7a1512; color: #fff; font-weight: 700; font-size: 14px; padding: 7px 16px; border-radius: 999px; z-index: 70; display: none; white-space: nowrap; }
+  #offline.on { display: block; }
+  .modal { position: fixed; inset: 0; z-index: 80; background: #0b2a1ff2; overflow: auto; padding: max(14px, env(safe-area-inset-top)) 12px 30px; animation: vIn .25s ease-out; }
+  .modal.out { animation: popOut .2s ease-in forwards; }
+  .modal .in { max-width: 560px; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<section class="view on" id="join">
+  <div class="j-wrap">
+    <div class="j-logo"><div class="mk" data-logo></div><b data-title></b></div>
+    <div id="deskTv">
+      <p>Looks like you're on a computer. Is this the one plugged into the TV?</p>
+      <a class="tvbtn" href="/tv">Open the game board</a>
+      <span>OR JOIN AS A PLAYER</span>
+    </div>
+    <form id="joinForm" class="j-card" autocomplete="off">
+      <label for="code"><span>ROOM CODE</span><span class="tvhint">it's on the TV</span></label>
+      <input id="code" maxlength="4" placeholder="••••" autocapitalize="characters" autocorrect="off" spellcheck="false">
+      <label for="name"><span>YOUR NAME</span><span id="nameLeft">12</span></label>
+      <input id="name" maxlength="12" placeholder="Type your name" autocapitalize="characters" autocorrect="off" spellcheck="false">
+      <button class="j-play" id="playBtn">PLAY</button>
+      <p id="joinErr"></p>
+      <p id="joinWait"></p>
+    </form>
+    <p class="fine">Picking up a saved game? Use the same name you had before and you'll get your seat back.</p>
+    <p class="ver" id="ver"></p>
+  </div>
+</section>
+
+<section class="view" id="lobby"></section>
+<section class="view" id="play"></section>
+
+<div id="pop"><div><b></b><span></span></div></div>
+<div id="toast"></div>
+<div id="offline">Reconnecting…</div>
+
+<script src="/common.js"></script>
+<script src="/boards.js"></script>
+<script>
+(function () {
+  'use strict';
+  var F = window.Game, B = window.Boards, $ = F.$, esc = F.esc, money = F.money, sfx = F.sfx;
+  var sess = F.store.get('mon.me', null);      // { code, token, name }
+  var S = null, me = null, conn = null, hello = null, lastSeq = null;
+  var triedRejoinByName = false, typed = false;
+  var waiting = false, waited = false, waitTimer = null, online = false, LIVE_MS = 15 * 60 * 1000;
+  var ui = { tab: 'props', trade: null, deed: null, modal: null };   // what this phone has open
+  var COLORS = F.COLORS;
+  var LOGO = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="92" height="92" rx="10" fill="#f3ead3" stroke="#0b2a1f" stroke-width="5"/><rect x="4" y="4" width="92" height="22" rx="10" fill="#e02b2b"/><rect x="4" y="18" width="92" height="8" fill="#e02b2b"/><rect x="22" y="40" width="56" height="44" rx="6" fill="#1f6b4a"/><path d="M50 36 L30 55 L70 55 Z" fill="#2fbd5e"/><rect x="42" y="60" width="16" height="24" rx="3" fill="#ffcc33"/><circle cx="83" cy="80" r="10" fill="#ffcc33" stroke="#0b2a1f" stroke-width="3"/><text x="83" y="85" font-family="Impact, Arial Narrow, sans-serif" font-size="15" text-anchor="middle" fill="#0b2a1f">$</text></svg>';
+
+  function waitForGame() {
+    waiting = true; waited = true;
+    var bar = $('#offline');
+    bar.textContent = 'Hang tight. Bringing your game back…';
+    bar.classList.add('on');
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(function () { if (waiting && conn && hello) conn.send(hello); }, 2000);
+  }
+  function stopWaiting() {
+    if (!waiting) return;
+    waiting = false; clearTimeout(waitTimer);
+    var bar = $('#offline');
+    bar.classList.remove('on'); bar.textContent = 'Reconnecting…';
+  }
+
+  document.querySelectorAll('[data-title]').forEach(function (n) { n.textContent = F.TITLE; });
+  document.querySelectorAll('[data-logo]').forEach(function (n) { n.innerHTML = LOGO; });
+  document.title = F.TITLE;
+  $('#ver').textContent = 'VERSION ' + F.VERSION;
+  F.pressFx();
+
+  function show(id) { document.querySelectorAll('.view').forEach(function (n) { n.classList.toggle('on', n.id === id); }); }
+  var toastTimer, toastOut;
+  function toast(msg) {
+    var t = $('#toast');
+    clearTimeout(toastTimer); clearTimeout(toastOut);
+    t.textContent = msg; t.classList.remove('out');
+    if (t.classList.contains('on')) F.bump(t, 1.06); else t.classList.add('on');
+    toastTimer = setTimeout(function () { t.classList.add('out'); toastOut = setTimeout(function () { t.classList.remove('on', 'out'); }, 200); }, 2800);
+  }
+  var popTimer, popOut;
+  function pop(kind, title, sub, ms) {
+    var el = $('#pop');
+    clearTimeout(popTimer); clearTimeout(popOut);
+    el.className = ''; void el.offsetWidth;
+    el.querySelector('b').textContent = title;
+    el.querySelector('span').textContent = sub || '';
+    el.className = 'on ' + kind;
+    popTimer = setTimeout(function () { el.classList.add('out'); popOut = setTimeout(function () { el.className = ''; }, 260); }, ms || 1400);
+  }
+  function hidePop() { clearTimeout(popTimer); clearTimeout(popOut); $('#pop').className = ''; }
+  function buzzPhone(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* ignore */ } }
+  function send(m) { if (!conn || !conn.send(m)) toast('Reconnecting… try again in a second'); }
+  function idx(id) { var i = -1; (S ? S.players : []).forEach(function (p, k) { if (p.id === id) i = k; }); return i; }
+  function pname(id) { var i = idx(id); return i >= 0 ? S.players[i].name : '?'; }
+  function piece(id) { var i = idx(id); return i >= 0 ? S.pieces[S.players[i].piece] : ''; }
+  function colorOf(id) { var i = idx(id); return COLORS[(i < 0 ? 0 : i) % COLORS.length]; }
+  function nameOfSpace(i) { return S.names[i]; }
+  function G() { return S.game; }
+
+  function fitViewport() {
+    var vv = window.visualViewport;
+    document.documentElement.style.setProperty('--vh', (vv ? vv.height : innerHeight) + 'px');
+  }
+  if (window.visualViewport) visualViewport.addEventListener('resize', fitViewport);
+  addEventListener('resize', fitViewport); fitViewport();
+
+  /* ------------------------------------------------------------- join */
+  var codeIn = $('#code'), nameIn = $('#name');
+  var qCode = (new URLSearchParams(location.search).get('code') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+  codeIn.value = qCode || '';
+  if (qCode) $('#join').classList.add('hascode');
+  nameIn.value = F.store.get('mon.name', '');
+  function joinReady() {
+    codeIn.value = codeIn.value.toUpperCase().replace(/[^A-Z]/g, '');
+    $('#nameLeft').textContent = (12 - nameIn.value.length) + ' left';
+    var ok = codeIn.value.length === 4 && nameIn.value.trim().length > 0;
+    $('#playBtn').classList.toggle('ready', ok);
+    if (ok && /^Enter the/.test($('#joinErr').textContent)) $('#joinErr').textContent = '';
+    return ok;
+  }
+  codeIn.addEventListener('input', joinReady); nameIn.addEventListener('input', joinReady); joinReady();
+  $('#joinForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    sfx.unlock();
+    if (!joinReady()) { $('#joinErr').textContent = 'Enter the 4-letter room code and your name.'; F.shake($('#joinForm')); return; }
+    $('#joinErr').textContent = '';
+    typed = true;
+    F.store.set('mon.name', nameIn.value.trim().toUpperCase());
+    joinBusy(true);
+    var nm = nameIn.value.trim();
+    if (sess && sess.token && sess.code === codeIn.value && sess.name === nm.toUpperCase()) { triedRejoinByName = false; start({ t: 'rejoin', code: sess.code, token: sess.token }); }
+    else start({ t: 'join', code: codeIn.value, name: nm });
+  });
+  var busyTimer;
+  function joinBusy(on) {
+    var b = $('#playBtn');
+    clearTimeout(busyTimer);
+    b.classList.toggle('busy', on);
+    b.textContent = on ? 'JOINING…' : 'PLAY';
+    $('#joinWait').textContent = '';
+    if (on) busyTimer = setTimeout(function () { $('#joinWait').textContent = 'Waking the game up. The first join of the night can take up to a minute.'; }, 3500);
+  }
+  function start(h) {
+    hello = h; lastSeq = null;
+    if (!conn) {
+      conn = F.connect({
+        hello: function () { return hello; },
+        onMessage: onMessage,
+        onStatus: function (ok) { online = ok; $('#offline').classList.toggle('on', !ok && !!S); }
+      });
+    } else if (!conn.send(h)) { joinBusy(false); $('#joinErr').textContent = 'Connecting… tap PLAY again in a moment.'; }
+  }
+  function backToJoin(msg) {
+    stopWaiting();
+    S = null; me = null; hello = null; sess = null; ui = { tab: 'props', trade: null, deed: null, modal: null };
+    F.store.del('mon.me');
+    closeModal(true); hidePop(); joinBusy(false);
+    show('join');
+    $('#joinErr').textContent = msg || '';
+    if (msg) F.shake($('#joinForm'));
+  }
+
+  function onMessage(m) {
+    if (m.t === 'joined') {
+      joinBusy(false); stopWaiting(); waited = false;
+      sess = { code: m.code, token: m.token, name: (sess && sess.name) || nameIn.value.trim().toUpperCase(), at: Date.now() };
+      F.store.set('mon.me', sess);
+      hello = { t: 'rejoin', code: m.code, token: m.token };
+      triedRejoinByName = false;
+      F.stayAwake();
+    } else if (m.t === 'error') {
+      var ours = sess && hello && (hello.t === 'rejoin' || (hello.t === 'join' && String(hello.code).toUpperCase() === sess.code));
+      if (m.code === 'noroom' && m.wait && ours && (S || Date.now() - (sess.at || 0) < LIVE_MS)) {
+        waitForGame();
+      } else if (m.code === 'noroom' && hello && hello.t === 'rejoin' && sess && sess.name && !triedRejoinByName) {
+        triedRejoinByName = true;
+        hello = { t: 'join', code: sess.code, name: sess.name };
+        conn.send(hello);
+      } else if (!S || m.code === 'noroom') {
+        if (waited && sess && m.code === 'noroom') {
+          var keep = sess;
+          backToJoin('Your game hasn’t come back yet. Once the TV shows it again, tap PLAY to jump back in.');
+          sess = keep; F.store.set('mon.me', keep);
+          codeIn.value = keep.code; if (keep.name) nameIn.value = keep.name; joinReady(); waited = false;
+        } else backToJoin(typed || S ? m.msg : '');
+      } else { toast(m.msg); buzzPhone(60); }
+    } else if (m.t === 'left') {
+      if (conn && m.replaced) { conn.stop(); conn = null; }
+      backToJoin(m.kicked ? 'You were removed from the game.' : m.replaced ? 'This game was opened on another device or tab.' : '');
+    } else if (m.t === 'state') {
+      if ($('#playBtn').classList.contains('busy')) joinBusy(false);
+      if (sess && Date.now() - (sess.at || 0) > 20000) { sess.at = Date.now(); F.store.set('mon.me', sess); }
+      var list = m.s.fx || [], fresh = [];
+      if (lastSeq === null) lastSeq = list.length ? list[list.length - 1].seq : 0;
+      else { fresh = list.filter(function (e) { return e.seq > lastSeq; }); if (fresh.length) lastSeq = fresh[fresh.length - 1].seq; }
+      S = m.s; me = S.me;
+      render(fresh);
+    }
+  }
+  if (sess && sess.code && sess.token && (!qCode || qCode === sess.code)) start({ t: 'rejoin', code: sess.code, token: sess.token });
+  setInterval(function () { if (S && sess && online) { sess.at = Date.now(); F.store.set('mon.me', sess); } }, 60000);
+
+  /* ----------------------------------------------------------- render */
+  var lastPhase = null, lastTurn = false, lastOffer = null;
+  function render(fresh) {
+    var has = {};
+    fresh.forEach(function (e) { has[e.type] = e; });
+    if (has.restored) toast('We’re back. Right where we left off.');
+    if (has.loaded) toast('Picked up where you left off. Welcome back.');
+    if (S.phase === 'lobby') { closeModal(true); hidePop(); renderLobby(); show('lobby'); lastPhase = 'lobby'; return; }
+    show('play');
+    renderPlay(has);
+    if (ui.modal) renderModal();
+    lastPhase = S.phase;
+  }
+
+  /* ------------------------------------------------------------ lobby */
+  function renderLobby() {
+    var h = '<div class="bar"><span>ROOM <b>' + esc(S.code) + '</b></span><span>' + esc(me.name) + (me.isCaptain ? ' · CAPTAIN' : '') + '</span></div>';
+    h += '<div class="card mine" data-key="piece"><h3><span>YOUR PIECE</span><small>TAP TO PICK</small></h3><div class="pieces">' +
+      S.pieces.map(function (pc, n) { var taken = S.players.filter(function (p) { return p.piece === n && p.id !== me.id; })[0]; return '<button data-a="piece" data-n="' + n + '" class="' + (me.piece === n ? 'on' : '') + '"' + (taken ? ' disabled title="' + esc(taken.name) + '"' : '') + '>' + pc + '</button>'; }).join('') + '</div></div>';
+    h += '<div class="card" data-key="players"><h3><span>PLAYERS</span><small>' + S.players.length + ' OF ' + S.maxPlayers + '</small></h3><div class="who">' +
+      (S.players.length ? S.players.map(function (p) { return '<span class="' + (p.id === me.id ? 'me' : '') + (p.on ? '' : ' off') + '"><i style="background:' + colorOf(p.id)[0] + '">' + esc(S.pieces[p.piece]) + '</i>' + esc(p.name) + '</span>'; }).join('') : '<em>Nobody yet</em>') + '</div>';
+    h += '<p class="note">The TV picks the board, the cards and how the game ends. ' + (me.isCaptain ? 'You can start it from here or from the TV.' : 'The TV, or ' + esc(pname(S.captain)) + ', starts it.') + '</p>';
+    if (me.isCaptain) h += '<button class="btn gold big' + (S.players.length >= S.minPlayers ? ' glow' : '') + '" data-a="start"' + (S.players.length >= S.minPlayers ? '' : ' disabled') + '>Start the game</button>';
+    h += '</div>';
+    var st = S.settings, th = S.themes.filter(function (t) { return t.id === st.theme; })[0], dk = S.decks.filter(function (d) { return d.id === st.deck; })[0];
+    h += '<div class="card" data-key="setup"><h3><span>THIS GAME</span></h3><div class="side"><div><h4>BOARD</h4><ul><li>' + esc(th ? th.name : '') + '</li><li>' + esc(dk ? dk.name : '') + ' cards</li></ul></div><div><h4>ENDS</h4><ul><li>' + (st.mode === 'timer' ? 'after ' + st.minutes + ' minutes, richest wins' : 'last player standing') + '</li>' + (st.turnSecs ? '<li>' + st.turnSecs + 's turn clock</li>' : '') + '</ul></div></div></div>';
+    h += '<a class="link" href="#" data-a="leave" style="display:block;text-align:center;margin:18px 0 8px;color:#9ccbb1;font-size:14px">Leave this room</a>';
+    F.morph($('#lobby'), h);
+  }
+
+  /* ------------------------------------------------------------- play */
+  var PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+  function die(n) { return '<div class="die">' + [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (k) { return '<i class="' + ((PIPS[n] || []).indexOf(k) >= 0 ? 'on' : '') + '"></i>'; }).join('') + '</div>'; }
+  function swatch(i, cls) {
+    var sp = B.LAYOUT[i];
+    var col = sp.t === 'prop' ? B.GROUPS[sp.g].color : sp.t === 'rail' ? '#222' : '#8a8f99';
+    return '<i class="' + (cls || '') + '" style="background:' + col + '"></i>';
+  }
+  function deed(i, opts) {
+    var sp = B.LAYOUT[i], g = G(), pr = g.props[i], col = sp.t === 'prop' ? B.GROUPS[sp.g].color : sp.t === 'rail' ? '#222' : '#8a8f99', ink = sp.t === 'prop' ? B.GROUPS[sp.g].ink : '#fff';
+    var rows = F.rentRows(sp, S.rails);
+    var owned = pr ? B.members(sp.g).filter(function (k) { return g.props[k] && g.props[k].owner === pr.owner; }).length : 0;
+    var nowRow = -1;
+    if (pr) { if (sp.t === 'prop') nowRow = pr.h ? pr.h + 1 : (owned === B.members(sp.g).length ? 1 : 0); else nowRow = owned - 1; }
+    var h = '<div class="deed"><div class="hd" style="background:' + col + ';color:' + ink + '"><small>' + esc(sp.t === 'prop' ? B.GROUPS[sp.g].name : sp.t === 'rail' ? S.rails : 'Utility') + '</small>' + esc(nameOfSpace(i)) + '</div><table>';
+    rows.forEach(function (r, k) { h += '<tr class="' + (k === nowRow ? 'now' : '') + '"><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>'; });
+    h += '</table><div class="ft">' + (sp.t === 'prop' ? 'Houses cost ' + money(sp.house) + ' each · ' : '') + 'Mortgage value ' + money(sp.price / 2) + (pr ? ' · Owned by ' + esc(pname(pr.owner)) + (pr.m ? ' (mortgaged)' : '') : ' · Price ' + money(sp.price)) + '</div></div>';
+    void opts;
+    return h;
+  }
+
+  function renderPlay(has) {
+    var g = G(), c = colorOf(me.id);
+    var h = '<div class="top" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(me.piece != null ? S.pieces[me.piece] : '') + '</span><div class="nm">' + esc(me.name) + '<small>' + (me.bankrupt ? 'BANKRUPT' : esc(nameOfSpace(me.pos)) + (me.jail ? ' · IN JAIL' : '')) + '</small></div><div class="money"><span data-key="myCash" data-live>' + money(me.cash) + '</span><small>NET ' + money((g.players[me.id] || {}).net || 0) + '</small></div></div>';
+    h += mainCard(has);
+    h += tabs();
+    F.morph($('#play'), h);
+    F.countTo($('[data-key="myCash"]'), me.cash, 500);
+    feel(has);
+  }
+
+  // What the game wants from this phone right now.
+  function mainCard(has) {
+    var g = G(), h = '';
+    if (S.phase === 'gameOver') return endCard();
+    if (me.bankrupt) return '<div class="card bad"><div class="say bad"><b>YOU’RE OUT</b><span>Bankrupt. Stick around and watch the TV: the game keeps going without you.</span></div></div>';
+    var dice = g.roll && g.roll.d1 ? '<div class="dice">' + die(g.roll.d1) + die(g.roll.d2) + '</div>' : '';
+    if (S.phase === 'rolloff') return '<div class="card"><div class="say"><b>WHO GOES FIRST?</b><span>Everyone rolls. Look at the TV.</span></div></div>';
+    if (me.debt) {
+      var d = me.debt, short = d.amount - me.cash;
+      h = '<div class="card bad" data-key="main"><div class="say bad"><b>YOU OWE ' + money(d.amount) + '</b><span>' + esc(d.to === 'bank' ? 'to the bank' : d.to === 'each' ? 'to everyone' : 'to ' + pname(d.to)) + ' · ' + esc(d.reason) + '</span></div>';
+      if (short > 0) h += '<p class="note">You have ' + money(me.cash) + '. Raise ' + money(short) + ' more: sell buildings or mortgage below, or make a trade.</p>';
+      h += '<button class="btn gold big" data-a="payDebt"' + (short > 0 ? ' disabled' : '') + '>Pay ' + money(d.amount) + '</button>';
+      if (d.liquid < d.amount) h += '<button class="btn red sm" data-a="bankrupt">Declare bankruptcy</button><p class="note">Even selling everything you only get to ' + money(d.liquid) + '. A trade could still save you.</p>';
+      h += clockHtml() + '</div>';
+      return h;
+    }
+    if (me.offer != null) {
+      var sp = B.LAYOUT[me.offer];
+      h = '<div class="card mine" data-key="main"><div class="say"><b>' + esc(nameOfSpace(me.offer)) + '</b><span>You landed here. Buy it for ' + money(sp.price) + ', or let it go to auction.</span></div>' + deed(me.offer);
+      h += '<div class="row2"><button class="btn gold" data-a="buy"' + (me.cash < sp.price ? ' disabled' : '') + '>Buy ' + money(sp.price) + '</button><button class="btn ghost" data-a="decline">Auction it</button></div>';
+      if (me.cash < sp.price) h += '<p class="note">You have ' + money(me.cash) + '. Mortgage something below first if you want it.</p>';
+      return h + clockHtml() + '</div>';
+    }
+    if (S.phase === 'auction' && g.auction) {
+      var a = g.auction, top = a.bid, mineTop = a.bidder === me.id, passed = !me.inAuction;
+      h = '<div class="card' + (mineTop ? ' mine' : '') + '" data-key="main"><div class="say"><b>AUCTION</b><span>' + esc(nameOfSpace(a.space)) + ' · ' + (a.bidder ? 'high bid ' + money(a.bid) + ' from ' + (mineTop ? 'you' : esc(pname(a.bidder))) : 'no bids yet') + '</span></div>' + deed(a.space);
+      if (passed) h += '<p class="note">You passed on this one.</p>';
+      else if (mineTop) h += '<p class="note">You’re the high bidder. Hold tight.</p>';
+      else {
+        var steps = [top + 10, top + 50, top + 100].map(function (v) { return Math.max(v, 10); });
+        h += '<div class="bids">' + steps.map(function (v) { return '<button class="btn gold" data-a="bid" data-v="' + v + '"' + (v > me.cash ? ' disabled' : '') + '>' + money(v) + '</button>'; }).join('') + '</div>';
+        h += '<div class="custom"><input id="bidIn" data-key="bidIn" type="number" inputmode="numeric" placeholder="Any amount up to ' + money(me.cash) + '"><button class="btn blue" data-a="bidCustom">Bid</button></div>';
+        h += '<button class="btn ghost sm" data-a="pass">Pass</button>';
+      }
+      return h + clockHtml() + '</div>';
+    }
+    if (me.myTurn) {
+      if (me.jail) {
+        h = '<div class="card mine" data-key="main"><div class="say"><b>YOU’RE IN JAIL</b><span>Roll doubles to get out (' + me.jailTurns + ' of 3 tries used), pay the ' + money(me.jailFine) + ' fine, or use a card.' + (me.jailTurns >= 2 ? ' This is your last roll: if it isn’t doubles you pay and move anyway.' : '') + '</span></div>';
+        h += '<button class="roll" data-a="roll">ROLL</button>';
+        h += '<div class="row2"><button class="btn" data-a="payJail"' + (me.canPayJail ? '' : ' disabled') + '>Pay ' + money(me.jailFine) + '</button><button class="btn blue" data-a="useCard"' + (me.canUseCard ? '' : ' disabled') + '>Use card</button></div>';
+        return h + clockHtml() + '</div>';
+      }
+      h = '<div class="card mine" data-key="main"><div class="say"><b>YOUR TURN</b><span>' + (g.roll && g.roll.n ? 'Doubles! Roll again.' + (g.roll.n === 2 ? ' Careful: a third doubles is jail.' : '') : 'Roll the dice.') + '</span></div>';
+      h += '<button class="roll" data-a="roll">ROLL</button>';
+      return h + clockHtml() + '</div>';
+    }
+    // not your move
+    var cur = pname(g.cur), what = '';
+    switch (S.phase) {
+      case 'turn': what = g.cur === me.id ? '' : cur + (g.players[g.cur].jail ? ' is in jail and deciding what to do.' : ' is rolling.'); break;
+      case 'moving': what = cur + ' rolled ' + (g.roll && g.roll.d1 ? g.roll.d1 + g.roll.d2 : '') + '.'; break;
+      case 'buy': what = pname(g.offer.pid) + ' is deciding whether to buy ' + nameOfSpace(g.offer.space) + '.'; break;
+      case 'card': what = (g.card ? pname(g.card.pid) : cur) + ' drew a card.'; break;
+      case 'debt': what = pname(g.debts[0].pid) + ' owes ' + money(g.debts[0].amount) + ' and is raising the money.'; break;
+      case 'pause': what = g.log.length ? g.log[g.log.length - 1].text : ''; break;
+    }
+    h = '<div class="card" data-key="main"><div class="say"><b>' + esc(S.phase === 'card' && g.card ? (g.card.which === 'chance' ? 'CHANCE' : 'COMMUNITY CHEST') : cur.toUpperCase() + "'S TURN") + '</b><span>' + esc(what) + '</span></div>' + dice;
+    if (S.phase === 'card' && g.card) h += '<div class="cardtext ' + g.card.which + '">' + esc(g.card.text) + '</div>';
+    return h + '</div>';
+  }
+
+  function clockHtml() {
+    var c = G().clock;
+    if (!c) return '';
+    return '<div class="clock' + (c.left < 5000 ? ' hot' : '') + '"><i style="transform:scaleX(' + (c.left / c.len).toFixed(3) + ');transition:transform ' + (c.left / 1000).toFixed(1) + 's linear" data-live data-key="clk' + c.what + Math.round(c.len) + '"></i></div>';
+  }
+
+  function tabs() {
+    var g = G(), inbox = g.trades.filter(function (t) { return t.to === me.id; }).length;
+    var h = '<div class="tabs">' + [['props', 'My stuff'], ['trade', 'Trade'], ['players', 'Players'], ['log', 'Log']].map(function (t) { return '<button data-a="tab" data-v="' + t[0] + '" class="' + (ui.tab === t[0] ? 'on' : '') + '">' + t[1] + (t[0] === 'trade' && inbox ? '<span class="n">' + inbox + '</span>' : '') + '</button>'; }).join('') + '</div>';
+    if (ui.tab === 'props') h += propsTab();
+    else if (ui.tab === 'trade') h += tradeTab();
+    else if (ui.tab === 'players') h += playersTab();
+    else h += '<div class="card logl" data-key="logTab">' + g.log.slice().reverse().map(function (l) { return '<div class="' + esc(l.kind) + '">' + esc(l.text) + '</div>'; }).join('') + '</div>';
+    return h;
+  }
+
+  function myProps() {
+    var g = G();
+    return Object.keys(g.props).map(Number).filter(function (i) { return g.props[i].owner === me.id; }).sort(function (a, b) { return a - b; });
+  }
+  function houseHtml(h) { return h ? '<span class="houses">' + (h === 5 ? '<i class="h"></i>' : new Array(h + 1).join('<i></i>')) + '</span>' : ''; }
+
+  function propsTab() {
+    var g = G(), mine = myProps();
+    var h = '<div class="card" data-key="propsTab"><h3><span>MY PROPERTIES</span><small>' + mine.length + ' · ' + (me.cards && (me.cards.chance || me.cards.chest) ? ((me.cards.chance ? 1 : 0) + (me.cards.chest ? 1 : 0)) + ' JAIL CARD' : 'TAP A NAME FOR ITS CARD') + '</small></h3>';
+    if (!mine.length) h += '<p class="note">Nothing yet. Land on something and buy it.</p>';
+    mine.forEach(function (i) {
+      var sp = B.LAYOUT[i], pr = g.props[i], acts = me.props[i] || {};
+      var btn = function (a, label, why, cls) { return '<button data-a="' + a + '" data-i="' + i + '" class="' + (why ? 'dim' : cls || '') + '" data-why="' + esc(why || '') + '">' + label + '</button>'; };
+      h += '<div class="prop">' + swatch(i, pr.m ? 'sw m' : 'sw') + '<div class="in" data-a="deed" data-i="' + i + '"><b>' + esc(nameOfSpace(i)) + houseHtml(pr.h) + '</b><small>' + (pr.m ? 'Mortgaged · lift for ' + money(acts.liftCost) : sp.t === 'prop' ? 'Rent ' + money(rentNow(i)) + ' · house ' + money(sp.house) : 'Rent ' + money(rentNow(i))) + '</small></div><div class="bs">';
+      if (pr.m) h += btn('unmortgage', 'Lift', acts.lift, 'b');
+      else {
+        if (sp.t === 'prop' && acts.build !== 'n/a') h += btn('build', pr.h === 4 ? 'Hotel' : 'Build', acts.build, 'b');
+        if (pr.h) h += btn('sell', 'Sell', acts.sell);
+        h += btn('mortgage', 'Mortgage', acts.mortgage);
+      }
+      h += '</div></div>';
+    });
+    h += '</div>';
+    return h;
+  }
+  function rentNow(i) {
+    var g = G(), sp = B.LAYOUT[i], pr = g.props[i];
+    var owned = B.members(sp.g).filter(function (k) { return g.props[k] && g.props[k].owner === pr.owner; }).length;
+    if (sp.t === 'rail') return 25 * Math.pow(2, owned - 1);
+    if (sp.t === 'util') return 7 * (owned === 2 ? 10 : 4);
+    if (pr.h) return sp.rent[pr.h];
+    return sp.rent[0] * (owned === B.members(sp.g).length ? 2 : 1);
+  }
+
+  function playersTab() {
+    var g = G();
+    var h = '<div class="card plist" data-key="playersTab">';
+    S.players.forEach(function (p) {
+      var pl = g.players[p.id], c = colorOf(p.id);
+      var chips = Object.keys(g.props).map(Number).filter(function (i) { return g.props[i].owner === p.id; }).sort(function (a, b) { return a - b; }).map(function (i) { return swatch(i, g.props[i].m ? 'm' : ''); }).join('');
+      h += '<div style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(S.pieces[p.piece]) + '</span><div class="nm">' + esc(p.name) + (g.cur === p.id ? ' · UP' : '') + '<small>' + (pl.bankrupt ? 'Bankrupt' : esc(nameOfSpace(pl.pos)) + (pl.jail ? ' · in jail' : '') + (pl.cards ? ' · ' + pl.cards + ' jail card' + (pl.cards > 1 ? 's' : '') : '')) + '</small><div class="chips">' + chips + '</div></div><div class="cash">' + money(pl.cash) + '<small>NET ' + money(pl.net) + '</small></div></div>';
+    });
+    return h + '</div>';
+  }
+
+  /* -------- trading */
+  function tradeTab() {
+    var g = G(), h = '';
+    var inbox = g.trades.filter(function (t) { return t.to === me.id; }), sent = g.trades.filter(function (t) { return t.from === me.id; });
+    inbox.forEach(function (t) {
+      h += '<div class="card mine" data-key="in' + t.id + '"><h3><span>' + esc(pname(t.from)) + ' OFFERS</span><small>TRADE</small></h3>' + sideHtml(t.give, 'You get') + sideHtml(t.get, 'You give') + (t.note ? '<p class="note">“' + esc(t.note) + '”</p>' : '') +
+        '<div class="row3"><button class="btn gold sm" data-a="accept" data-id="' + t.id + '">Accept</button><button class="btn blue sm" data-a="counter" data-id="' + t.id + '">Counter</button><button class="btn ghost sm" data-a="declineTrade" data-id="' + t.id + '">No thanks</button></div></div>';
+    });
+    sent.forEach(function (t) {
+      h += '<div class="card" data-key="out' + t.id + '"><h3><span>WAITING ON ' + esc(pname(t.to)) + '</span><small>YOUR OFFER</small></h3>' + sideHtml(t.give, 'You give') + sideHtml(t.get, 'You get') + '<button class="btn ghost sm" data-a="cancelTrade" data-id="' + t.id + '">Take it back</button></div>';
+    });
+    var others = S.players.filter(function (p) { return p.id !== me.id && !g.players[p.id].bankrupt; });
+    h += '<div class="card" data-key="newTrade"><h3><span>MAKE AN OFFER</span><small>ANY TIME</small></h3>';
+    if (me.bankrupt) return h + '<p class="note">You’re out of the game.</p></div>';
+    h += '<div class="who">' + others.map(function (p) { return '<span class="' + (ui.trade && ui.trade.to === p.id ? 'me' : '') + '" data-a="tradeWith" data-id="' + p.id + '"><i style="background:' + colorOf(p.id)[0] + '">' + esc(S.pieces[p.piece]) + '</i>' + esc(p.name) + '</span>'; }).join('') + '</div>';
+    if (ui.trade && ui.trade.to) {
+      var tr = ui.trade, them = g.players[tr.to];
+      if (!them || them.bankrupt) { ui.trade = null; return h + '</div>'; }
+      h += '<div class="label">YOU GIVE</div>' + pickList(me.id, tr.give) + cashRow('give', me.cash, tr.give.cash) + cardRow(me.id, 'give', tr.give);
+      h += '<div class="label">YOU GET FROM ' + esc(pname(tr.to)) + '</div>' + pickList(tr.to, tr.get) + cashRow('get', them.cash, tr.get.cash) + cardRow(tr.to, 'get', tr.get);
+      h += '<p class="note">Buildings have to be sold before a property can be traded. Whoever takes on a mortgaged property pays 10% interest on the spot.</p>';
+      h += '<button class="btn gold" data-a="sendTrade">Send the offer</button><button class="btn ghost sm" data-a="clearTrade">Clear</button>';
+    } else h += '<p class="note">Pick who you want to trade with.</p>';
+    return h + '</div>';
+  }
+  function sideHtml(side, label) {
+    var bits = side.props.map(function (i) { return swatch(i, 'sw') + ' ' + esc(nameOfSpace(i)); });
+    if (side.cash) bits.push(money(side.cash));
+    if (side.chance || side.chest) bits.push('a Get Out of Jail Free card');
+    return '<div class="label">' + label + '</div><div class="who">' + (bits.length ? bits.map(function (b) { return '<span>' + b + '</span>'; }).join('') : '<em>nothing</em>') + '</div>';
+  }
+  function pickList(pid, side) {
+    var g = G(), list = Object.keys(g.props).map(Number).filter(function (i) { return g.props[i].owner === pid; }).sort(function (a, b) { return a - b; });
+    if (!list.length) return '<p class="note" style="margin-top:4px">No properties.</p>';
+    return list.map(function (i) {
+      var pr = g.props[i], on = side.props.indexOf(i) >= 0;
+      return '<div class="prop pick ' + (on ? 'on' : '') + '" data-a="pick" data-side="' + (pid === me.id ? 'give' : 'get') + '" data-i="' + i + '">' + swatch(i, pr.m ? 'sw m' : 'sw') + '<div class="in"><b>' + esc(nameOfSpace(i)) + houseHtml(pr.h) + '</b><small>' + (pr.m ? 'mortgaged' : money(B.LAYOUT[i].price)) + (pr.h ? ' · sell buildings first' : '') + '</small></div><div class="bs"><button class="' + (on ? 'b' : '') + '">' + (on ? '✓' : '+') + '</button></div></div>';
+    }).join('');
+  }
+  function cashRow(side, max, val) {
+    return '<div class="cashIn"><span>$</span><input type="number" inputmode="numeric" data-key="cash' + side + '" data-cash="' + side + '" placeholder="0" value="' + (val || '') + '" min="0" max="' + max + '"><span>of ' + money(max) + '</span></div>';
+  }
+  function cardRow(pid, side, st) {
+    var g = G(), pl = g.players[pid], have = pid === me.id ? ((me.cards.chance ? 1 : 0) + (me.cards.chest ? 1 : 0)) : pl.cards;
+    if (!have) return '';
+    return '<div class="prop pick ' + (st.card ? 'on' : '') + '" data-a="pickCard" data-side="' + side + '"><div class="in"><b>Get Out of Jail Free card</b><small>' + have + ' available</small></div><div class="bs"><button class="' + (st.card ? 'b' : '') + '">' + (st.card ? '✓' : '+') + '</button></div></div>';
+  }
+  function newTrade(to) { return { to: to, give: { props: [], cash: 0, card: false }, get: { props: [], cash: 0, card: false } }; }
+
+  /* -------- game over */
+  function endCard() {
+    var g = G(), rk = g.ranking || [], mine = rk.filter(function (r) { return r.id === me.id; })[0] || {};
+    var h = '<div class="card mine" data-key="main"><div class="say ' + (mine.place === 1 ? 'good' : '') + '"><b>' + (mine.place === 1 ? 'YOU WIN!' : mine.place ? ordinal(mine.place) + ' PLACE' : 'GAME OVER') + '</b><span>' + esc(g.why === 'time' ? "Time's up. Ranked by net worth." : g.why === 'last' ? 'Last one standing.' : 'The game was ended.') + '</span></div>';
+    if (me.awards && me.awards.length) h += '<div style="text-align:center;margin:6px 0 8px">' + me.awards.map(function (k) { var a = (g.awards || []).filter(function (x) { return x.key === k; })[0]; return a ? '<span class="award">' + esc(a.title) + '</span>' : ''; }).join('') + '</div>';
+    h += '<div class="ranks">' + rk.map(function (r) { return '<div><span>' + r.place + '. ' + esc(piece(r.id) + ' ' + r.name) + '</span><b>' + (r.out ? 'bankrupt' : money(r.net)) + '</b></div>'; }).join('') + '</div>';
+    if (me.stats) h += '<div class="stats" style="margin-top:12px"><div><b>' + money(me.stats.rent) + '</b>RENT TAKEN</div><div><b>' + money(me.stats.rentPaid) + '</b>RENT PAID</div><div><b>' + me.stats.bought + '</b>BOUGHT</div></div>';
+    if (me.isCaptain) h += '<button class="btn gold" data-a="lobby">Play again</button>';
+    else h += '<p class="note">' + esc(pname(S.captain)) + ' or the TV can start another game.</p>';
+    return h + '</div>';
+  }
+  function ordinal(n) { return n + (['th', 'st', 'nd', 'rd'][(n % 100 > 10 && n % 100 < 14) ? 0 : (n % 10 < 4 ? n % 10 : 0)]); }
+
+  /* -------- pops, sounds and buzzes for the things that happen to you */
+  function feel(has) {
+    var g = G();
+    var myTurnNow = me.myTurn && !me.bankrupt;
+    if (myTurnNow && !lastTurn) { pop('turn', 'YOUR TURN', me.jail ? 'You’re in jail' : 'Roll the dice'); sfx.turn(); buzzPhone([60, 40, 60]); }
+    lastTurn = myTurnNow;
+    if (me.offer != null && lastOffer !== me.offer) { buzzPhone(50); }
+    lastOffer = me.offer;
+    if (has.roll && has.roll.pid === me.id) sfx.dice();
+    if (has.rent && has.rent.to === me.id) { sfx.cash(); pop('good', '+' + money(has.rent.amount), pname(has.rent.pid) + ' pays you rent'); }
+    if (has.rent && has.rent.pid === me.id) { sfx.pay(); pop('bad', '−' + money(has.rent.amount), 'rent to ' + pname(has.rent.to)); buzzPhone(80); }
+    if (has.tax && has.tax.pid === me.id) { sfx.pay(); pop('bad', '−' + money(has.tax.amount), 'tax'); }
+    if (has.collect && has.collect.pid === me.id) { sfx.cash(); pop('good', '+' + money(has.collect.amount), 'from the card'); }
+    if (has.jail && has.jail.pid === me.id) { sfx.jail(); pop('bad', 'JAIL', 'Go directly. Do not pass GO.', 1800); buzzPhone([100, 60, 100]); }
+    if (has.free && has.free.pid === me.id) sfx.free();
+    if (has.buy && has.buy.pid === me.id) { sfx.buy(); pop('good', 'YOURS', nameOfSpace(has.buy.space)); }
+    if (has.sold && has.sold.pid === me.id) { sfx.buy(); pop('good', 'SOLD TO YOU', nameOfSpace(has.sold.space) + ' for ' + money(has.sold.amount)); }
+    if (has.card && has.card.pid === me.id) sfx.card();
+    if (has.debt && has.debt.pid === me.id) { sfx.horn(); buzzPhone([120, 60, 120]); }
+    if (has.paid && has.paid.pid === me.id) sfx.pay();
+    if (has.bankrupt && has.bankrupt.pid === me.id) { sfx.broke(); pop('bad', 'BANKRUPT', 'You’re out', 2200); }
+    if (has.bankrupt && has.bankrupt.to === me.id) { sfx.cash(); pop('good', 'EVERYTHING', pname(has.bankrupt.pid) + ' went bankrupt to you', 2000); }
+    if (has.tradeOffer && has.tradeOffer.to === me.id) { sfx.trade(); buzzPhone([60, 40, 60]); if (ui.tab !== 'trade') toast(pname(has.tradeOffer.from) + ' sent you a trade. It’s in the Trade tab.'); }
+    if (has.trade && (has.trade.from === me.id || has.trade.to === me.id)) { sfx.trade(); pop('good', 'TRADED', 'with ' + pname(has.trade.from === me.id ? has.trade.to : has.trade.from)); if (ui.trade) ui.trade = null; }
+    if (has.tradeNo && has.tradeNo.from === me.id) toast(pname(has.tradeNo.to) + ' turned down your trade.');
+    if (has.bid && has.bid.pid !== me.id && S.phase === 'auction' && me.inAuction) sfx.bid();
+    if (has.win) { if (g.winner === me.id) { sfx.win(); buzzPhone([80, 60, 80, 60, 200]); } }
+    if (has.auto && has.auto.pid === me.id) toast('Your phone was away, so the game played that one for you.');
+  }
+
+  /* -------- a property's card, full screen */
+  function renderModal() {
+    var m = ui.modal, el = $('#modal');
+    if (!el) { el = document.createElement('div'); el.id = 'modal'; el.className = 'modal'; el.innerHTML = '<div class="in" id="modalIn"></div>'; document.body.appendChild(el); }
+    var h = '';
+    if (m.deed != null) h = '<div class="bar"><span>PROPERTY</span><span></span></div>' + deed(m.deed) + '<button class="btn ghost" data-a="closeModal">Close</button>';
+    $('#modalIn').innerHTML = h;
+  }
+  function closeModal(now) {
+    var el = $('#modal'); ui.modal = null;
+    if (!el) return;
+    if (now) el.remove(); else { el.classList.add('out'); setTimeout(function () { el.remove(); }, 200); }
+  }
+
+  /* ------------------------------------------------------------ taps */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-a]'); if (!b || !S) return;
+    var a = b.getAttribute('data-a'), i = Number(b.getAttribute('data-i')), v = b.getAttribute('data-v');
+    if (b.tagName === 'A') e.preventDefault();
+    sfx.unlock();
+    switch (a) {
+      case 'piece': send({ t: 'piece', n: Number(b.getAttribute('data-n')) }); break;
+      case 'start': send({ t: 'h', a: 'start' }); break;
+      case 'lobby': send({ t: 'h', a: 'lobby' }); break;
+      case 'leave': if (confirm('Leave this room?')) { send({ t: 'leave' }); backToJoin(); } break;
+      case 'tab': ui.tab = v; render([]); break;
+      case 'roll': b.disabled = true; send({ t: 'roll' }); break;
+      case 'payJail': send({ t: 'payJail' }); break;
+      case 'useCard': send({ t: 'useCard' }); break;
+      case 'buy': send({ t: 'buy' }); break;
+      case 'decline': send({ t: 'decline' }); break;
+      case 'bid': send({ t: 'bid', amount: Number(v) }); break;
+      case 'bidCustom': { var inp = $('#bidIn'); var amt = Math.round(Number(inp && inp.value)); if (!amt) { toast('Type an amount.'); break; } send({ t: 'bid', amount: amt }); break; }
+      case 'pass': send({ t: 'pass' }); break;
+      case 'payDebt': send({ t: 'payDebt' }); break;
+      case 'bankrupt': if (confirm('Declare bankruptcy? You’re out of the game.')) send({ t: 'bankrupt' }); break;
+      case 'build': case 'sell': case 'mortgage': case 'unmortgage': {
+        var why = b.getAttribute('data-why');
+        if (why) { toast(why); buzzPhone(40); break; }
+        if (a === 'mortgage' && !confirm('Mortgage ' + nameOfSpace(i) + ' for ' + money(B.LAYOUT[i].price / 2) + '? Lifting it later costs 10% more.')) break;
+        send({ t: a, i: i });
+        break;
+      }
+      case 'deed': ui.modal = { deed: i }; renderModal(); break;
+      case 'closeModal': closeModal(); break;
+      case 'tradeWith': { var id = b.getAttribute('data-id'); ui.trade = ui.trade && ui.trade.to === id ? null : newTrade(id); render([]); break; }
+      case 'pick': { var side = ui.trade[b.getAttribute('data-side')]; var k = side.props.indexOf(i); if (k >= 0) side.props.splice(k, 1); else side.props.push(i); render([]); break; }
+      case 'pickCard': { var sd = ui.trade[b.getAttribute('data-side')]; sd.card = !sd.card; render([]); break; }
+      case 'clearTrade': ui.trade = newTrade(ui.trade.to); render([]); break;
+      case 'sendTrade': {
+        var t = ui.trade; readCash();
+        var mk = function (s) { return { props: s.props, cash: s.cash, card: !!s.card }; };   // "card" means one Get Out of Jail Free card, whichever they hold
+        send({ t: 'trade', to: t.to, give: mk(t.give), get: mk(t.get) });
+        toast('Offer sent to ' + pname(t.to) + '.');
+        break;
+      }
+      case 'accept': send({ t: 'tradeAnswer', id: Number(b.getAttribute('data-id')), accept: true }); break;
+      case 'declineTrade': send({ t: 'tradeAnswer', id: Number(b.getAttribute('data-id')), accept: false }); break;
+      case 'cancelTrade': send({ t: 'tradeCancel', id: Number(b.getAttribute('data-id')) }); break;
+      case 'counter': {
+        var tr = G().trades.filter(function (x) { return x.id === Number(b.getAttribute('data-id')); })[0];
+        if (!tr) break;
+        ui.trade = { to: tr.from, give: { props: tr.get.props.slice(), cash: tr.get.cash, card: tr.get.chance || tr.get.chest }, get: { props: tr.give.props.slice(), cash: tr.give.cash, card: tr.give.chance || tr.give.chest } };
+        send({ t: 'tradeAnswer', id: tr.id, accept: false });
+        render([]);
+        break;
+      }
+    }
+  });
+  function readCash() {
+    if (!ui.trade) return;
+    document.querySelectorAll('input[data-cash]').forEach(function (inp) { ui.trade[inp.getAttribute('data-cash')].cash = Math.max(0, Math.round(Number(inp.value) || 0)); });
+  }
+  document.addEventListener('input', function (e) { if (e.target.hasAttribute && e.target.hasAttribute('data-cash')) readCash(); });
+})();
+</script>
+</body>
+</html>
