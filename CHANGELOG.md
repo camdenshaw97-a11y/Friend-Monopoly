@@ -6,6 +6,23 @@ glance which version a screen is running.
 
 Times are Pacific.
 
+## 1.2 · October 25, 2026
+
+**Boards that look like where they are, colors, and a few fixes**
+- **Themed boards.** Each board has its own look on the TV: San Diego is sand, sea and
+  palms with a sunset band; Las Vegas is a dark board with a neon star, dice and card suits;
+  Classic stays classic. The room behind the board changes color to match.
+- **Pick your color** in the lobby, next to your piece. It's the ring behind your emoji on the
+  board and the color of your panel. Remembered for next time, like your piece.
+- **JOIN CODE** button in the bottom right of the TV during a game: tap it for a big QR code
+  and the room code, for anyone who needs to get back in.
+- **Add time** to a timed game from the TV: +5, +10, +15 or +30 minutes in the tools row.
+- **Fix:** the Log tab on phones drew a giant ROLL button over the entries (a log line about a
+  roll was picking up the roll button's style). Log lines are styled on their own now.
+- **Fix:** the "what's happening" bar on the TV sizes itself to the name of the place instead
+  of cutting it off; long names on the narrow spaces (Cosmopolitan, Chinatown) fit their cells.
+- The TV's tool chips wrap to two rows so they stay under the log.
+
 ## 1.1 · October 25, 2026
 
 **Polish, bots, chat, and more going on**

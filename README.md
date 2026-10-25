@@ -10,8 +10,8 @@ rules: it follows the official ones.
 1. On the computer plugged into the TV, open `YOUR-SITE/tv` and click **Start a new game**.
    Press `F` for full screen.
 2. Everyone else opens `YOUR-SITE` on their phone (or scans the QR code on the TV) and types the
-   4-letter room code and their name. 2 to 8 players. Each phone picks a piece: one of the quick
-   picks, or any emoji from the keyboard.
+   4-letter room code and their name. 2 to 8 players. Each phone picks a piece (one of the quick
+   picks, or any emoji from the keyboard) and a color.
 3. Short a few people? **+ Add a bot** on the TV. Bots roll, buy, bid, build, trade and pay up
    like anyone else.
 4. On the TV, pick the board, the cards, how the game ends, the bidding clock and (if you want
@@ -59,12 +59,14 @@ The rulebook, not the house rules.
   cost). Anyone who went bankrupt is placed below them, last out highest.
 - **Last player standing.** The game goes until one player is left.
 
-The TV can also end a game early (**End game** in the corner): richest wins.
+The TV can add time to a timed game (+5 to +30 minutes) or end a game early (**End game**):
+richest wins. **JOIN CODE** in the corner shows the QR code and room code big, for anyone who
+needs to get back in.
 
 ## Boards and cards
 
-- **Boards:** Classic, San Diego, Las Vegas. Prices, rents and colors are the same on every board;
-  only the names change. **My boards…** on the TV lets you name your own board (your town, your
+- **Boards:** Classic, San Diego, Las Vegas, each with its own look on the TV. Prices, rents and
+  color groups are the same on every board; only the names and the scenery change. **My boards…** on the TV lets you name your own board (your town, your
   friends, inside jokes), saved on that computer. Save to file / Load from file moves them
   between computers.
 - **Cards:** Classic, or the 18+ **Late Night** deck: the same effects, told differently.

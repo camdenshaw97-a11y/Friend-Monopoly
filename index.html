@@ -79,6 +79,10 @@
   .pieces button { aspect-ratio: 1; border: 0; border-radius: 16px; font-size: 36px; background: #ffffff14; transition: transform .1s; }
   .pieces button.on { background: var(--gold); box-shadow: 0 0 0 3px #fff; }
   .pieces button:disabled { opacity: .3; cursor: default; }
+  .swatches { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+  .swatches button { aspect-ratio: 1; width: 100%; min-width: 0; padding: 0; border: 0; border-radius: 50%; background: linear-gradient(var(--c1), var(--c2)); font-size: 20px; box-shadow: 0 3px 0 #0006; transition: transform .1s; }
+  .swatches button.on { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--c1); transform: scale(1.08); }
+  .swatches button:disabled { opacity: .35; cursor: default; }
   .emojiIn { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
   .emojiIn input { width: 74px; flex: none; font-size: 30px; text-align: center; background: #fff; border: 0; border-radius: 14px; padding: 8px 4px; outline: none; }
   .emojiIn input:focus { box-shadow: 0 0 0 3px var(--gold); }
@@ -180,8 +184,9 @@
   .chips i { width: 14px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px #0b2a1f; }
   .chips i.m { opacity: .45; }
   .chips i.rail { background: #222; } .chips i.util { background: #8a8f99; }
-  .logl div { font: 600 14px/1.45 var(--text); color: #cfe6d8; padding: 6px 0; border-bottom: 1px solid #ffffff0f; }
-  .logl div.rent, .logl div.tax, .logl div.debt, .logl div.bankrupt, .logl div.jail { color: #ffb4ae; } .logl div.buy, .logl div.go, .logl div.pay { color: #a9f0c5; } .logl div.card { color: #ffd98a; } .logl div.trade { color: #9fd3ff; } .logl div.monopoly { color: var(--gold); }
+  .logl .lg { font: 600 14px/1.45 var(--text); color: #cfe6d8; padding: 7px 0; border-bottom: 1px solid #ffffff0f; }
+  .logl .lg:last-child { border-bottom: 0; }
+  .logl .lg-rent, .logl .lg-tax, .logl .lg-debt, .logl .lg-bankrupt, .logl .lg-jail { color: #ffb4ae; } .logl .lg-buy, .logl .lg-go, .logl .lg-pay { color: #a9f0c5; } .logl .lg-card { color: #ffd98a; } .logl .lg-trade { color: #9fd3ff; } .logl .lg-monopoly { color: var(--gold); } .logl .lg-win { color: var(--gold); font-weight: 800; }
   .cardtext { background: #fff; color: #1b1b1b; border-radius: 16px; padding: 16px; font: 700 16px/1.45 var(--text); text-align: center; margin: 8px 0 4px; animation: cardIn .45s cubic-bezier(.2, 1.3, .4, 1); }
   @keyframes cardIn { from { transform: rotateY(90deg) scale(.7); opacity: 0; } }
   .cardtext small { display: block; font: 400 18px var(--display); letter-spacing: .14em; margin-bottom: 6px; }
@@ -332,7 +337,7 @@
   function player(id) { var i = idx(id); return i >= 0 ? S.players[i] : null; }
   function pname(id) { var p = player(id); return p ? p.name : '?'; }
   function piece(id) { var p = player(id); return p ? p.piece : ''; }
-  function colorOf(id) { var i = idx(id); return COLORS[(i < 0 ? 0 : i) % COLORS.length]; }
+  function colorOf(id) { var p = player(id); return COLORS[((p && p.color != null) ? p.color : Math.max(0, idx(id))) % COLORS.length]; }
   function nameOfSpace(i) { return S.names[i]; }
   function G() { return S.game; }
 
@@ -368,7 +373,7 @@
     joinBusy(true);
     var nm = nameIn.value.trim();
     if (sess && sess.token && sess.code === codeIn.value && sess.name === nm.toUpperCase()) { triedRejoinByName = false; start({ t: 'rejoin', code: sess.code, token: sess.token }); }
-    else start({ t: 'join', code: codeIn.value, name: nm, piece: F.store.get('mon.piece', '') });
+    else start({ t: 'join', code: codeIn.value, name: nm, piece: F.store.get('mon.piece', ''), color: F.store.get('mon.color', null) });
   });
   var busyTimer;
   function joinBusy(on) {
@@ -481,7 +486,8 @@
     var h = '<div class="bar"><span>ROOM <b>' + esc(S.code) + '</b></span><span>' + esc(me.name) + (me.isCaptain ? ' · CAPTAIN' : '') + '</span></div>';
     h += '<div class="card mine" data-key="piece"><h3><span>YOUR PIECE</span><small>' + esc(me.piece) + ' · TAP TO CHANGE</small></h3><div class="pieces">' +
       S.pieces.map(function (pc) { var taken = S.players.filter(function (p) { return p.piece === pc && p.id !== me.id; })[0]; return '<button data-a="piece" data-p="' + esc(pc) + '" class="' + (me.piece === pc ? 'on' : '') + '"' + (taken ? ' disabled title="' + esc(taken.name) + '"' : '') + '>' + pc + '</button>'; }).join('') + '</div>';
-    h += '<div class="emojiIn"><input id="emojiIn" data-key="emojiIn" maxlength="8" placeholder="🙂" inputmode="text" value="' + esc(ui.piece) + '"><span>Or any emoji from your keyboard.</span><button class="btn gold" data-a="pieceCustom">Use it</button></div></div>';
+    h += '<div class="emojiIn"><input id="emojiIn" data-key="emojiIn" maxlength="8" placeholder="🙂" inputmode="text" value="' + esc(ui.piece) + '"><span>Or any emoji from your keyboard.</span><button class="btn gold" data-a="pieceCustom">Use it</button></div>';
+    h += '<div class="label">YOUR COLOR</div><div class="swatches">' + COLORS.map(function (c, n) { var taken = S.players.filter(function (p) { return p.color === n && p.id !== me.id; })[0]; return '<button data-a="color" data-n="' + n + '" class="' + (me.color === n ? 'on' : '') + '" style="--c1:' + c[0] + ';--c2:' + c[1] + '"' + (taken ? ' disabled title="' + esc(taken.name) + '"' : '') + '>' + (me.color === n ? esc(me.piece || '') : (taken ? esc(taken.piece) : '')) + '</button>'; }).join('') + '</div></div>';
     h += '<div class="card" data-key="players"><h3><span>PLAYERS</span><small>' + S.players.length + ' OF ' + S.maxPlayers + '</small></h3><div class="who">' +
       (S.players.length ? S.players.map(function (p) { return '<span class="' + (p.id === me.id ? 'me' : '') + (p.on ? '' : ' off') + '"><i style="background:' + colorOf(p.id)[0] + '">' + esc(p.piece) + '</i>' + esc(p.name) + (p.bot ? '<span class="tag">BOT</span>' : '') + '</span>'; }).join('') : '<em>Nobody yet</em>') + '</div>';
     h += '<p class="note">The TV picks the board, the cards and how the game ends. ' + (me.isCaptain ? 'You can start it from here or from the TV.' : 'The TV, or ' + esc(pname(S.captain)) + ', starts it.') + '</p>';
@@ -618,7 +624,7 @@
     else if (ui.tab === 'trade') h += tradeTab();
     else if (ui.tab === 'chat') h += chatTab();
     else if (ui.tab === 'players') h += playersTab();
-    else h += '<div class="card logl" data-key="logTab">' + g.log.slice().reverse().map(function (l) { return '<div class="' + esc(l.kind) + '">' + esc(l.text) + '</div>'; }).join('') + '</div>';
+    else h += '<div class="card logl" data-key="logTab">' + g.log.slice().reverse().map(function (l) { return '<div class="lg lg-' + esc(l.kind) + '">' + esc(l.text) + '</div>'; }).join('') + '</div>';
     return h;
   }
 
@@ -810,6 +816,7 @@
     sfx.unlock();
     switch (a) {
       case 'piece': send({ t: 'piece', piece: b.getAttribute('data-p') }); F.store.set('mon.piece', b.getAttribute('data-p')); break;
+      case 'color': send({ t: 'color', n: Number(b.getAttribute('data-n')) }); F.store.set('mon.color', Number(b.getAttribute('data-n'))); break;
       case 'pieceCustom': { var pc = ($('#emojiIn').value || '').trim(); if (!pc) { toast('Type an emoji first.'); break; } ui.piece = pc; send({ t: 'piece', piece: pc }); F.store.set('mon.piece', pc); break; }
       case 'start': send({ t: 'h', a: 'start' }); break;
       case 'lobby': send({ t: 'h', a: 'lobby' }); break;

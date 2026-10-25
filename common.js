@@ -6,7 +6,7 @@
   // Change this to rename the game everywhere.
   F.TITLE = 'FRIEND MONOPOLY';
   // Shown small on the start screens. Goes up with every change; CHANGELOG.md says what each one was.
-  F.VERSION = '1.1';
+  F.VERSION = '1.2';
 
   F.$ = function (sel, root) { return (root || document).querySelector(sel); };
   F.esc = function (s) {
@@ -362,7 +362,7 @@
     if (sp.t === 'prop') h += '<i class="band" style="background:' + G[sp.g].color + '"></i>';
     var icon = { go: '→', chest: '▣', chance: '?', tax: '◆', rail: '▬', util: '✦', jail: '▦', parking: 'P', gotojail: '✋' }[sp.t] || '';
     if (sp.t !== 'prop') h += '<i class="ic ' + sp.t + '">' + icon + '</i>';
-    h += '<b class="nm">' + esc(name) + '</b>';
+    h += '<b class="nm' + (String(name).split(' ').some(function (w) { return w.length >= 9; }) ? ' long' : '') + '">' + esc(name) + '</b>';
     if (sp.price) h += '<em class="pr">' + F.money(sp.price) + '</em>';
     else if (sp.t === 'tax') h += '<em class="pr">PAY ' + F.money(sp.amount) + '</em>';
     if (opts && opts.owners) h += '<span class="own" data-live></span>';

@@ -76,6 +76,14 @@
   var NAMED = [];
   LAYOUT.forEach(function (s, i) { if (s.t === 'prop' || s.t === 'rail' || s.t === 'util' || s.t === 'tax') NAMED.push(i); });
 
+  // How each board looks on the TV: the colors of the spaces, the middle, the title band, the
+  // room behind it, and which picture goes in the middle.
+  var LOOKS = {
+    classic: { tv: ['#1f6b4a', '#134a32', '#0b2a1f', '#04150e'], tile: '#f3ead3', line: '#0b2a1f', ink: '#1b1b1b', ink2: '#3a3a3a', center: ['#efe4c8', '#e4d8b8'], band: ['#e8352b', '#b3160e'], bandInk: '#fff', frame: '#0b2a1f', art: 'classic', go: ['#f3ead3', '#ffd9d3'] },
+    sandiego: { tv: ['#2a8fd8', '#1b5f9e', '#0e3a63', '#06192e'], tile: '#fbf4e4', line: '#0e3a63', ink: '#0e2a47', ink2: '#3b5570', center: ['#cfeefc', '#4fb0e6'], band: ['#ff8a3d', '#e8356f'], bandInk: '#fff', frame: '#0e3a63', art: 'sandiego', go: ['#fbf4e4', '#ffe0b3'] },
+    vegas: { tv: ['#5a1b8f', '#3a0f66', '#1d0836', '#090311'], tile: '#1e1a26', line: '#3d3550', ink: '#f6f3ff', ink2: '#bdb6d1', center: ['#1a1026', '#0a060f'], band: ['#ff2e9a', '#8a1bd1'], bandInk: '#fff', frame: '#2a1038', art: 'vegas', go: ['#1e1a26', '#3a1230'] }
+  };
+
   var THEMES = [
     {
       id: 'classic', name: 'Classic', blurb: 'The board everyone knows: Baltic to Boardwalk.',
@@ -114,7 +122,7 @@
         11: 'Excalibur', 12: 'Power Company', 13: 'Luxor', 14: 'New York-New York',
         15: 'The Monorail', 16: 'The LINQ', 18: 'Flamingo', 19: 'Planet Hollywood',
         21: 'MGM Grand', 23: 'Mandalay Bay', 24: 'Paris Las Vegas', 25: 'The Deuce',
-        26: 'Caesars Palace', 27: 'The Venetian', 28: 'Water Works', 29: 'Cosmopolitan',
+        26: 'Caesars Palace', 27: 'The Venetian', 28: 'Water Works', 29: 'The Cosmo',
         31: 'Aria', 32: 'Wynn', 34: 'Encore', 35: 'Vegas Loop',
         37: 'Bellagio', 38: 'Luxury Tax', 39: 'The Sphere'
       }
@@ -156,10 +164,11 @@
     for (var k = 0; k < all.length; k++) if (all[k].id === id) return all[k];
     return THEMES[0];
   }
+  function lookOf(id) { return LOOKS[id] || LOOKS.classic; }
 
   return {
-    GROUPS: GROUPS, LAYOUT: LAYOUT, NAMED: NAMED, THEMES: THEMES, FIXED: FIXED,
-    build: build, themeById: themeById, customTheme: customTheme,
+    GROUPS: GROUPS, LAYOUT: LAYOUT, NAMED: NAMED, THEMES: THEMES, FIXED: FIXED, LOOKS: LOOKS,
+    build: build, themeById: themeById, customTheme: customTheme, lookOf: lookOf,
     groupOf: function (i) { var s = LAYOUT[i]; return s && s.g ? s.g : null; },
     members: function (g) { var out = []; LAYOUT.forEach(function (s, i) { if (s.g === g) out.push(i); }); return out; },
     isOwnable: function (i) { var s = LAYOUT[i]; return !!(s && s.price); }

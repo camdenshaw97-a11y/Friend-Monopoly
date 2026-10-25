@@ -56,6 +56,8 @@ const BOT_NAMES = ['PENNY', 'BUCK', 'NICKEL', 'DIME', 'GRAND', 'CENT', 'BILL', '
 const BOT_PIECES = ['🤖', '👾', '🛸', '🦾', '🧠', '📟', '🎰', '🪙'];
 const BOT_MS = 1400;                   // a bot thinks this long before it does anything
 const AUCTION_CHOICES = [10, 15, 20, 30];
+const COLORS = 8;                      // the eight player colors, by index (the pages hold the swatches)
+const ADD_TIME_CHOICES = [5, 10, 15, 30];
 const MINUTE_CHOICES = [30, 45, 60, 90, 120];
 const TURN_CHOICES = [0, 30, 60, 90];  // a clock to roll, buy or settle a debt (0 = no clock)
 
@@ -272,7 +274,7 @@ const spacesOf = room => room.game ? room.game.spaces : Boards.build(themeOf(roo
 function packRoom(room, lean, kind) {
   const data = {
     v: BACKUP_V, at: Date.now(), kind: kind || 'backup', code: room.code, adminToken: room.adminToken,
-    players: [...room.players.values()].map(p => ({ id: p.id, token: p.token, name: p.name, piece: p.piece, bot: !!p.bot })),
+    players: [...room.players.values()].map(p => ({ id: p.id, token: p.token, name: p.name, piece: p.piece, color: p.color, bot: !!p.bot })),
     order: room.order, settings: room.settings, custom: room.custom, chats: lean ? {} : room.chats,
     game: room.game, fxSeq: room.fxSeq
   };
@@ -329,9 +331,10 @@ function hydrateRoom(d, code, opts) {
   };
   const hold = Date.now() + SEAT_HOLD_MS;
   for (const p of d.players) {
-    if (p.bot) room.players.set(p.id, { id: p.id, token: p.token, name: p.name, piece: p.piece, bot: true, connected: true, ws: null, hold: 0, goneAt: 0 });
-    else room.players.set(p.id, { id: p.id, token: opts.freshTokens ? rid() : p.token, name: p.name, piece: p.piece, connected: false, ws: null, hold: opts.freshTokens ? 0 : hold, goneAt: Date.now(), waitingFor: true });
+    if (p.bot) room.players.set(p.id, { id: p.id, token: p.token, name: p.name, piece: p.piece, color: p.color, bot: true, connected: true, ws: null, hold: 0, goneAt: 0 });
+    else room.players.set(p.id, { id: p.id, token: opts.freshTokens ? rid() : p.token, name: p.name, piece: p.piece, color: p.color, connected: false, ws: null, hold: opts.freshTokens ? 0 : hold, goneAt: Date.now(), waitingFor: true });
   }
+  for (const p of room.players.values()) if (!Number.isInteger(p.color)) p.color = freeColor(room);
   const g = room.game;
   if (g) {
     g.spaces = Boards.build(Boards.themeById(g.theme, room.custom.boards));
@@ -1303,7 +1306,7 @@ function addBot(room) {
   if (room.game || seats(room).length >= MAX_PLAYERS) return;
   const used = new Set([...room.players.values()].map(p => p.name));
   const name = BOT_NAMES.find(n => !used.has(n)) || ('BOT ' + crypto.randomInt(100, 999));
-  const p = { id: rid(6), token: rid(), name, piece: freePiece(room, BOT_PIECES), bot: true, connected: true, ws: null, hold: 0, goneAt: 0 };
+  const p = { id: rid(6), token: rid(), name, piece: freePiece(room, BOT_PIECES), color: freeColor(room), bot: true, connected: true, ws: null, hold: 0, goneAt: 0 };
   room.players.set(p.id, p);
   room.order.push(p.id);
   fx(room, 'joined', { name: p.name, pid: p.id, bot: true });
@@ -1476,6 +1479,15 @@ function adminAction(room, m) {
     case 'endGame':
       if (g && g.phase !== 'gameOver') endGame(room, 'early');
       return;
+    case 'addTime': {
+      const mins = Number(m.minutes);
+      if (!g || g.phase === 'gameOver' || !g.endsAt || !ADD_TIME_CHOICES.includes(mins)) return;
+      g.endsAt += mins * 60000 / SPEED;
+      log(room, 'The TV adds ' + mins + ' minutes to the clock.', 'time');
+      fx(room, 'time', { minutes: mins });
+      armEndTimer(room);
+      return;
+    }
   }
 }
 
@@ -1483,7 +1495,7 @@ function adminAction(room, m) {
 
 function publicState(room) {
   const g = room.game;
-  const pl = id => { const p = room.players.get(id); return p ? { id: p.id, name: p.name, on: p.connected, piece: p.piece, bot: !!p.bot } : null; };
+  const pl = id => { const p = room.players.get(id); return p ? { id: p.id, name: p.name, on: p.connected, piece: p.piece, color: p.color, bot: !!p.bot } : null; };
   const theme = themeOf(room);
   const s = {
     code: room.code,
@@ -1495,7 +1507,7 @@ function publicState(room) {
     decks: Cards.DECKS.map(d => ({ id: d.id, name: d.name, blurb: d.blurb, adult: !!d.adult })),
     names: spacesOf(room).map(sp => sp.name),
     rails: theme.rails,
-    pieces: PIECES, minPlayers: MIN_PLAYERS, maxPlayers: MAX_PLAYERS, minuteChoices: MINUTE_CHOICES, turnChoices: TURN_CHOICES, auctionChoices: AUCTION_CHOICES,
+    pieces: PIECES, colors: COLORS, minPlayers: MIN_PLAYERS, maxPlayers: MAX_PLAYERS, minuteChoices: MINUTE_CHOICES, turnChoices: TURN_CHOICES, auctionChoices: AUCTION_CHOICES, addTimeChoices: ADD_TIME_CHOICES,
     fx: room.fx,
     game: null
   };
@@ -1524,7 +1536,7 @@ function stateFor(room, pub, p) {
   const s = Object.assign({}, pub);
   const g = room.game;
   const playing = room.order.includes(p.id);
-  s.me = { id: p.id, name: p.name, piece: p.piece, isCaptain: pub.captain === p.id, playing };
+  s.me = { id: p.id, name: p.name, piece: p.piece, color: p.color, isCaptain: pub.captain === p.id, playing };
   s.me.chats = chatsFor(room, p.id);
   if (g && playing && g.players[p.id]) {
     const me = g.players[p.id];
@@ -1609,6 +1621,11 @@ function showOn(ws, room, admin) {
 }
 
 const pieceTaken = (room, piece, except) => [...room.players.values()].some(x => x !== except && x.piece === piece);
+const colorTaken = (room, n, except) => [...room.players.values()].some(x => x !== except && x.color === n);
+function freeColor(room) {
+  for (let n = 0; n < COLORS; n++) if (!colorTaken(room, n, null)) return n;
+  return room.players.size % COLORS;
+}
 function freePiece(room, list) {
   for (const pc of list || PIECES) if (!pieceTaken(room, pc, null)) return pc;
   return (list || PIECES)[0];
@@ -1662,7 +1679,8 @@ function onMessage(ws, m) {
       if (room.game) return send(ws, { t: 'error', msg: 'That game has already started. If you were in it, use the exact name you joined with.' });
       if (room.order.length >= MAX_PLAYERS) return send(ws, { t: 'error', msg: 'This room is full: ' + MAX_PLAYERS + ' players.' });
       const want = cleanPiece(m.piece);
-      p = { id: rid(6), token: rid(), name, piece: want && !pieceTaken(room, want, null) ? want : freePiece(room), connected: true, ws: null };
+      const wantColor = Number.isInteger(Number(m.color)) && Number(m.color) >= 0 && Number(m.color) < COLORS ? Number(m.color) : null;
+      p = { id: rid(6), token: rid(), name, piece: want && !pieceTaken(room, want, null) ? want : freePiece(room), color: wantColor != null && !colorTaken(room, wantColor, null) ? wantColor : freeColor(room), connected: true, ws: null };
       room.players.set(p.id, p);
       room.order.push(p.id);
       fx(room, 'joined', { name: p.name, pid: p.id });
@@ -1706,6 +1724,14 @@ function onMessage(ws, m) {
       if (!pc) { send(ws, { t: 'error', msg: 'Pick one emoji.' }); break; }
       if (pieceTaken(room, pc, p)) { send(ws, { t: 'error', msg: 'Someone already has that one.' }); break; }
       p.piece = pc;
+      break;
+    }
+    case 'color': {
+      if (g) break;
+      const n = Number(m.n);
+      if (!Number.isInteger(n) || n < 0 || n >= COLORS) break;
+      if (colorTaken(room, n, p)) { send(ws, { t: 'error', msg: 'Someone already has that color.' }); break; }
+      p.color = n;
       break;
     }
     case 'chat': chat(room, p, m); break;

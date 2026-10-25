@@ -134,6 +134,12 @@ async function main() {
   ben.send({ t: 'piece', piece: 'hi' });
   await wait(60);
   check('a word is not a piece', ben.state.me.piece === '🍕');
+  check('everyone gets a different color', new Set(tv.state.players.map(p => p.color)).size === 3);
+  ben.send({ t: 'color', n: ann.state.me.color });
+  await wait(60);
+  check("you can't take someone's color", ben.state.me.color !== ann.state.me.color);
+  ben.send({ t: 'color', n: 7 });
+  check('a free color can be picked', await ben.until(s => s.me.color === 7 && s.players.find(p => p.id === id(ben)).color === 7));
   // a private chat
   ann.send({ t: 'chat', to: id(ben), text: 'sell me baltic later?' });
   check('a message reaches the other phone', await ben.until(s => s.me.chats && s.me.chats[id(ann)] && s.me.chats[id(ann)][0].text === 'sell me baltic later?'));
@@ -167,6 +173,12 @@ async function main() {
   firstPhone.send({ t: 'roll' });
   check('a roll moves the token', await tv.until(s => s.phase === 'moving' && s.game.roll.d1 >= 1 && s.game.players[first].pos === (s.game.roll.d1 + s.game.roll.d2) % 40));
 
+  const before = tv.state.game.timeLeft;
+  tv.send({ t: 'h', a: 'addTime', minutes: 5 });
+  check('the TV can add time to the clock', await tv.until(s => s.game.timeLeft > before + 5 * 60000 / 40 - 2000));
+  ann.send({ t: 'h', a: 'addTime', minutes: 10 });
+  await wait(60);
+  check('a phone cannot', tv.state.game.timeLeft < before + 15 * 60000 / 40 - 2000);
   const seen = {};
   const rolledTurns = await playUntil(ps, tv, s => s.game && s.game.turnCount >= 8, 8000, seen);
   check('the bots play eight turns', rolledTurns, 'phase ' + tv.state.phase);
@@ -255,7 +267,7 @@ async function main() {
   const room2 = rooms.get(code);
 
   // time runs out: ranked by net worth
-  const ended = await playUntil(ps, tv, s => s.phase === 'gameOver', 20000, seen);
+  const ended = await playUntil(ps, tv, s => s.phase === 'gameOver', 30000, seen);
   check('the timed game ends', ended, 'phase ' + tv.state.phase);
   check("it ended because time ran out", tv.state.game.why === 'time');
   const rk = tv.state.game.ranking;
@@ -333,7 +345,7 @@ async function main() {
   await tvB.until(s => s.phase === 'turn', 3000);
   const away = qs.find(p => id(p) === r3.game.cur);
   away.close();
-  check('the game rolls for a phone that has gone', await tvB.until(s => s.game.log.some(l => /away/.test(l.text)), 4000));
+  check('the game rolls for a phone that has gone', await tvB.until(s => s.game.log.some(l => /away/.test(l.text)), 8000));
 
   /* =============================== game 4: bots play against each other */
   const tvC = new Screen('tvC'); await tvC.ready;
