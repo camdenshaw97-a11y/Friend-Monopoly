@@ -10,9 +10,13 @@ rules: it follows the official ones.
 1. On the computer plugged into the TV, open `YOUR-SITE/tv` and click **Start a new game**.
    Press `F` for full screen.
 2. Everyone else opens `YOUR-SITE` on their phone (or scans the QR code on the TV) and types the
-   4-letter room code and their name. 2 to 8 players. Each phone picks a piece.
-3. On the TV, pick the board, the cards, how the game ends and (if you want one) a turn clock.
-   Press **Start the game** on the TV, or the first player to join can start it from their phone.
+   4-letter room code and their name. 2 to 8 players. Each phone picks a piece: one of the quick
+   picks, or any emoji from the keyboard.
+3. Short a few people? **+ Add a bot** on the TV. Bots roll, buy, bid, build, trade and pay up
+   like anyone else.
+4. On the TV, pick the board, the cards, how the game ends, the bidding clock and (if you want
+   one) a turn clock. Press **Start the game** on the TV, or the first player to join can start
+   it from their phone.
 4. Everyone rolls for first. Then it's **ROLL** on your phone when it's your turn; the TV walks your
    piece round the board and tells everyone what happened.
 
@@ -64,10 +68,14 @@ The TV can also end a game early (**End game** in the corner): richest wins.
   friends, inside jokes), saved on that computer. Save to file / Load from file moves them
   between computers.
 - **Cards:** Classic, or the 18+ **Late Night** deck: the same effects, told differently.
+- **Bidding clock:** 10, 15, 20 or 30 seconds. Every bid restarts it; the hammer falls when it
+  runs out.
 - **Turn clock:** off, or 30, 60 or 90 seconds to roll, buy or settle a debt (twice that for a
   debt) before the game does it for you: it rolls, sends the property to auction, or sells and
   mortgages what it has to. A phone that has dropped off the network gets the same treatment
   after 25 seconds, so one dead battery doesn't stall the table.
+- **Chat:** the Chat tab on the phone sends private messages to one other player. The TV never
+  shows them.
 
 ## Saving a game for another night
 

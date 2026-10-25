@@ -11,7 +11,7 @@ process.env.SPEED_UP = '40';
 const WebSocket = require('ws');
 const Boards = require('../boards');
 const Cards = require('../cards');
-const { server, rooms, rentFor, netWorth, _t } = require('../server');
+const { server, rooms, rentFor, netWorth, cleanPiece, _t } = require('../server');
 
 const PORT = 3997;
 let failures = 0;
@@ -109,6 +109,7 @@ async function main() {
   check('both utilities pay 10x the dice; a card pays 10x too', rentFor(g0, 12, 7) === 70 && rentFor(g0, 12, 9, { utilDice: true }) === 90);
   const g1 = { spaces, players: { a: { cash: 100, bankrupt: false } }, props: { 1: { owner: 'a', h: 2, m: false }, 5: { owner: 'a', h: 0, m: true } } };
   check('net worth: cash + price (mortgaged at half) + houses at cost', netWorth(g1, 'a') === 100 + 60 + 100 + 100);
+  check('a piece is one emoji', cleanPiece('🦖') === '🦖' && cleanPiece('🇺🇸') === '🇺🇸' && cleanPiece('👍🏽') === '👍🏽' && cleanPiece('ab') === null && cleanPiece('🦖🦖') === null && cleanPiece('x') === null && cleanPiece('') === null);
 
   await new Promise(res => server.listen(PORT, res));
   console.log('server up on ' + PORT);
@@ -125,16 +126,24 @@ async function main() {
   const [ann, ben, cal] = ps;
   const id = p => p.state.me.id;
   check('three players, Ann is captain, every piece different', await tv.until(s => s.players.length === 3 && s.captain === id(ann) && new Set(s.players.map(p => p.piece)).size === 3));
-  ben.send({ t: 'piece', n: ann.state.me.piece });
+  ben.send({ t: 'piece', piece: ann.state.me.piece });
   await wait(60);
   check("you can't take someone's piece", ben.state.me.piece !== ann.state.me.piece && ben.errors.length === 1);
-  ben.send({ t: 'piece', n: 7 });
-  check('a free piece can be picked', await ben.until(s => s.me.piece === 7));
+  ben.send({ t: 'piece', piece: '🍕' });
+  check('any emoji can be a piece', await ben.until(s => s.me.piece === '🍕'));
+  ben.send({ t: 'piece', piece: 'hi' });
+  await wait(60);
+  check('a word is not a piece', ben.state.me.piece === '🍕');
+  // a private chat
+  ann.send({ t: 'chat', to: id(ben), text: 'sell me baltic later?' });
+  check('a message reaches the other phone', await ben.until(s => s.me.chats && s.me.chats[id(ann)] && s.me.chats[id(ann)][0].text === 'sell me baltic later?'));
+  await wait(40);
+  check('and nobody else', !cal.state.me.chats[id(ann)] && !cal.state.me.chats[id(ben)] && !JSON.stringify(tv.state).includes('baltic later'));
   ann.send({ t: 'h', a: 'settings', mode: 'last' });
   await wait(60);
   check('a phone cannot change the setup', tv.state.settings.mode === 'timer');
-  tv.send({ t: 'h', a: 'settings', theme: 'sandiego', deck: 'latenight', mode: 'timer', minutes: 5, turnSecs: 30 });
-  check('the TV sets up the game', await tv.until(s => s.settings.theme === 'sandiego' && s.settings.deck === 'latenight' && s.settings.minutes === 5 && s.settings.turnSecs === 30));
+  tv.send({ t: 'h', a: 'settings', theme: 'sandiego', deck: 'latenight', mode: 'timer', minutes: 5, turnSecs: 30, auctionSecs: 10 });
+  check('the TV sets up the game', await tv.until(s => s.settings.theme === 'sandiego' && s.settings.deck === 'latenight' && s.settings.minutes === 5 && s.settings.turnSecs === 30 && s.settings.auctionSecs === 10));
   check('the board names follow the theme', tv.state.names[39] === 'La Jolla' && tv.state.names[5] === 'Blue Line');
 
   const late = new Screen('Late'); await late.ready;
@@ -326,10 +335,25 @@ async function main() {
   away.close();
   check('the game rolls for a phone that has gone', await tvB.until(s => s.game.log.some(l => /away/.test(l.text)), 4000));
 
+  /* =============================== game 4: bots play against each other */
+  const tvC = new Screen('tvC'); await tvC.ready;
+  tvC.send({ t: 'create', custom: {} });
+  await tvC.until((s, l) => l.created);
+  for (let k = 0; k < 4; k++) tvC.send({ t: 'h', a: 'addBot' });
+  check('the TV adds four bots', await tvC.until(s => s.players.length === 4 && s.players.every(p => p.bot) && new Set(s.players.map(p => p.piece)).size === 4));
+  tvC.send({ t: 'h', a: 'removeBot' });
+  check('and can take one away', await tvC.until(s => s.players.length === 3));
+  tvC.send({ t: 'h', a: 'settings', mode: 'last', auctionSecs: 10 });
+  tvC.send({ t: 'h', a: 'start' });
+  check('a bot game starts', await tvC.until(s => s.phase === 'turn', 4000));
+  check('bots play by themselves', await tvC.until(s => s.game.turnCount >= 12 && Object.keys(s.game.props).length >= 2, 20000), 'turn ' + (tvC.state.game && tvC.state.game.turnCount));
+  tvC.send({ t: 'h', a: 'endGame' });
+  await tvC.until(s => s.phase === 'gameOver');
+
   console.log(failures ? failures + ' FAILED' : 'all good');
-  for (const p of [tv, tvB, ...ps, ...qs]) { try { p.close(); } catch (e) { /* already closed */ } }
+  for (const p of [tv, tvB, tvC, ...ps, ...qs]) { try { p.close(); } catch (e) { /* already closed */ } }
   server.close();
-  for (const r of rooms.values()) { clearTimeout(r.timer); clearTimeout(r.endTimer); clearTimeout(r.backupTimer); clearTimeout(r.tidyTimer); }
+  for (const r of rooms.values()) { clearTimeout(r.timer); clearTimeout(r.endTimer); clearTimeout(r.backupTimer); clearTimeout(r.tidyTimer); clearTimeout(r.botTimer); }
   process.exit(failures ? 1 : 0);
 }
 

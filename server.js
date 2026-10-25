@@ -51,7 +51,11 @@ const BANK_HOTELS = 12;
 const MORTGAGE_INTEREST = 0.1;         // paid on top when lifting a mortgage, or on receiving a mortgaged property
 const MAX_PLAYERS = 8;
 const MIN_PLAYERS = 2;
-const PIECES = ['🌮', '👟', '🎮', '🚀', '🌵', '🍩', '🛹', '🤖'];
+const PIECES = ['🌮', '👟', '🎮', '🚀', '🌵', '🍩', '🛹', '🦖'];   // the quick picks; any single emoji works
+const BOT_NAMES = ['PENNY', 'BUCK', 'NICKEL', 'DIME', 'GRAND', 'CENT', 'BILL', 'QUID'];
+const BOT_PIECES = ['🤖', '👾', '🛸', '🦾', '🧠', '📟', '🎰', '🪙'];
+const BOT_MS = 1400;                   // a bot thinks this long before it does anything
+const AUCTION_CHOICES = [10, 15, 20, 30];
 const MINUTE_CHOICES = [30, 45, 60, 90, 120];
 const TURN_CHOICES = [0, 30, 60, 90];  // a clock to roll, buy or settle a debt (0 = no clock)
 
@@ -61,8 +65,6 @@ const TELEPORT_MS = 1400;              // a card sending you somewhere
 const CARD_MS = 4200;                  // a card stays up this long before it does its thing
 const PAUSE_MS = 2600;                 // the end of a move stays up this long before the next turn
 const ROLLOFF_MS = 4200;
-const AUCTION_SECS = 12;
-const AUCTION_BUMP_SECS = 8;           // a bid gives everyone this long to beat it
 const IDLE_MS = 25000;                 // a player whose phone dropped is played for after this
 const SPEED = Number(process.env.SPEED_UP) || 1;   // tests run the clocks faster
 const ROOM_IDLE_MS = 6 * 60 * 60 * 1000;
@@ -91,7 +93,7 @@ const BACKUP_KEY = (() => {
   return crypto.createHash('sha256').update('friend-monopoly room backup|' + seed).digest();
 })();
 
-const DEFAULT_SETTINGS = { theme: 'classic', deck: 'classic', mode: 'timer', minutes: 60, turnSecs: 0 };
+const DEFAULT_SETTINGS = { theme: 'classic', deck: 'classic', mode: 'timer', minutes: 60, turnSecs: 0, auctionSecs: 15 };
 const rooms = new Map();
 
 /* ------------------------------------------------------------------ http */
@@ -214,6 +216,19 @@ function send(ws, msg) {
   if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg));
 }
 
+// A piece is one emoji: a single grapheme that is a pictograph (flags and skin tones welcome).
+const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('en', { granularity: 'grapheme' }) : null;
+function cleanPiece(s) {
+  s = String(s == null ? '' : s).trim();
+  if (!s || s.length > 24) return null;
+  const parts = segmenter ? [...segmenter.segment(s)].map(x => x.segment) : [s];
+  if (parts.length !== 1) return null;
+  const g = parts[0];
+  if (!/\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(g)) return null;
+  if (/^[0-9#*]/.test(g) && g.length < 3) return null;
+  return g;
+}
+
 const money = n => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
 
 /* ----------------------------------------------------------------- rooms */
@@ -228,11 +243,13 @@ function newRoom() {
     order: [],            // players, in the order they joined: their seats
     settings: Object.assign({}, DEFAULT_SETTINGS),
     custom: { boards: [] },
+    chats: {},            // private messages, by 'id|id' pair (ids sorted)
     game: null,
     fx: [],
     fxSeq: 0,
     timer: null,          // the one action clock (see armTimer)
-    endTimer: null        // the game clock in a timed game
+    endTimer: null,       // the game clock in a timed game
+    botTimer: null
   };
   rooms.set(room.code, room);
   return room;
@@ -246,7 +263,7 @@ function fx(room, type, data) {
 const pname = (room, id) => { const p = room.players.get(id); return p ? p.name : '?'; };
 const seats = room => room.order.filter(id => room.players.has(id));
 // The first player runs the lobby from their phone too (Start, Play again). Settings live on the TV.
-const captainId = room => seats(room)[0] || null;
+const captainId = room => seats(room).find(id => !room.players.get(id).bot) || null;
 const themeOf = room => Boards.themeById(room.settings.theme, room.custom.boards);
 const spacesOf = room => room.game ? room.game.spaces : Boards.build(themeOf(room));
 
@@ -255,8 +272,8 @@ const spacesOf = room => room.game ? room.game.spaces : Boards.build(themeOf(roo
 function packRoom(room, lean, kind) {
   const data = {
     v: BACKUP_V, at: Date.now(), kind: kind || 'backup', code: room.code, adminToken: room.adminToken,
-    players: [...room.players.values()].map(p => ({ id: p.id, token: p.token, name: p.name, piece: p.piece })),
-    order: room.order, settings: room.settings, custom: room.custom,
+    players: [...room.players.values()].map(p => ({ id: p.id, token: p.token, name: p.name, piece: p.piece, bot: !!p.bot })),
+    order: room.order, settings: room.settings, custom: room.custom, chats: lean ? {} : room.chats,
     game: room.game, fxSeq: room.fxSeq
   };
   if (room.game) data.timeLeft = room.game.endsAt ? Math.max(0, room.game.endsAt - Date.now()) : null;
@@ -308,10 +325,13 @@ function hydrateRoom(d, code, opts) {
   const room = {
     code, adminToken: opts.adminToken, touched: Date.now(), displays: new Set(), players: new Map(),
     order: d.order || [], settings: Object.assign({}, DEFAULT_SETTINGS, d.settings),
-    custom: cleanCustom(d.custom), game: d.game, fx: [], fxSeq: (d.fxSeq || 0) + 50, timer: null, endTimer: null
+    custom: cleanCustom(d.custom), chats: d.chats && typeof d.chats === 'object' ? d.chats : {}, game: d.game, fx: [], fxSeq: (d.fxSeq || 0) + 50, timer: null, endTimer: null, botTimer: null
   };
   const hold = Date.now() + SEAT_HOLD_MS;
-  for (const p of d.players) room.players.set(p.id, { id: p.id, token: opts.freshTokens ? rid() : p.token, name: p.name, piece: p.piece, connected: false, ws: null, hold: opts.freshTokens ? 0 : hold, goneAt: Date.now(), waitingFor: true });
+  for (const p of d.players) {
+    if (p.bot) room.players.set(p.id, { id: p.id, token: p.token, name: p.name, piece: p.piece, bot: true, connected: true, ws: null, hold: 0, goneAt: 0 });
+    else room.players.set(p.id, { id: p.id, token: opts.freshTokens ? rid() : p.token, name: p.name, piece: p.piece, connected: false, ws: null, hold: opts.freshTokens ? 0 : hold, goneAt: Date.now(), waitingFor: true });
+  }
   const g = room.game;
   if (g) {
     g.spaces = Boards.build(Boards.themeById(g.theme, room.custom.boards));
@@ -334,7 +354,7 @@ function restoreRoom(blob, code, token, idle) {
   const room = hydrateRoom(d, code, { adminToken: d.adminToken, idle });
   try { publicState(room); } catch (e) { console.error('restore error', e); return null; }
   rooms.set(code, room);
-  armTimer(room); armEndTimer(room);
+  armTimer(room); armEndTimer(room); scheduleBots(room);
   room.tidyTimer = setTimeout(() => {
     room.tidyTimer = null;
     if (rooms.get(code) !== room || room.game) return;
@@ -357,7 +377,7 @@ function loadRoom(blob) {
   const room = hydrateRoom(d, code, { adminToken: rid(), freshTokens: true });
   try { publicState(room); } catch (e) { console.error('load error', e); return null; }
   rooms.set(code, room);
-  armTimer(room); armEndTimer(room);
+  armTimer(room); armEndTimer(room); scheduleBots(room);
   fx(room, 'loaded');
   console.log('loaded saved game as room ' + code);
   return room;
@@ -430,7 +450,7 @@ function freshClock(room) {
     case 'moving': setClock(room, 'land', TELEPORT_MS); break;
     case 'card': setClock(room, 'card', CARD_MS); break;
     case 'pause': setClock(room, 'next', PAUSE_MS); break;
-    case 'auction': setClock(room, 'auction', AUCTION_SECS * 1000, true); break;
+    case 'auction': setClock(room, 'auction', room.settings.auctionSecs * 1000, true); break;
     case 'turn': case 'buy': case 'debt': turnClock(room); break;
     default: armTimer(room);
   }
@@ -577,6 +597,7 @@ function land(room) {
     case 'go':
       me.cash += GO_PAY;
       log(room, name + ' lands on GO and collects ' + money(GO_PAY) + '.', 'go');
+      fx(room, 'go', { pid });
       return done(room);
     case 'prop': case 'rail': case 'util': {
       const pr = g.props[sp.i];
@@ -688,10 +709,12 @@ function buy(room, p) {
   if (!g || g.phase !== 'buy' || !g.offer || g.offer.pid !== p.id) return;
   const sp = g.spaces[g.offer.space], me = P(g, p.id);
   if (me.cash < sp.price) return send(p.ws, { t: 'error', msg: "You can't afford it. Raise the money first, or let it go to auction." });
+  const before = fullSets(g, p.id);
   me.cash -= sp.price; me.stats.bought++;
   g.props[sp.i] = { owner: p.id, h: 0, m: false };
   log(room, pname(room, p.id) + ' buys ' + sp.name + ' for ' + money(sp.price) + '.', 'buy');
   fx(room, 'buy', { pid: p.id, space: sp.i });
+  noteSets(room, p.id, before);
   g.offer = null;
   settle(room);
 }
@@ -710,7 +733,7 @@ function startAuction(room, i, reason) {
   g.phase = 'auction';
   g.auction = { space: i, bid: 0, bidder: null, passed: [], reason, bids: 0 };
   fx(room, 'auction', { space: i, reason });
-  setClock(room, 'auction', AUCTION_SECS * 1000, true);
+  setClock(room, 'auction', room.settings.auctionSecs * 1000, true);
 }
 
 function bid(room, p, amount) {
@@ -724,7 +747,7 @@ function bid(room, p, amount) {
   a.bid = amount; a.bidder = p.id; a.bids++;
   a.passed = a.passed.filter(id => id !== p.id);
   fx(room, 'bid', { pid: p.id, amount });
-  setClock(room, 'auction', AUCTION_BUMP_SECS * 1000, true);
+  setClock(room, 'auction', room.settings.auctionSecs * 1000, true);
   checkAuction(room);
 }
 
@@ -748,11 +771,12 @@ function auctionEnd(room) {
   g.auction = null;
   if (a.bidder) {
     const me = P(g, a.bidder);
-    const paid = Math.min(a.bid, me.cash);
+    const paid = Math.min(a.bid, me.cash), before = fullSets(g, a.bidder);
     me.cash -= paid; me.stats.bought++;
     g.props[sp.i] = { owner: a.bidder, h: 0, m: false };
     log(room, pname(room, a.bidder) + ' wins ' + sp.name + ' at auction for ' + money(paid) + '.', 'buy');
     fx(room, 'sold', { pid: a.bidder, space: sp.i, amount: paid });
+    noteSets(room, a.bidder, before);
   } else {
     log(room, 'Nobody bids on ' + sp.name + '. It stays with the bank.', 'auction');
     fx(room, 'unsold', { space: sp.i });
@@ -1038,6 +1062,7 @@ function answerTrade(room, p, id, accept) {
     if (side.chance) { me.cards.chance = false; them.cards.chance = true; }
     if (side.chest) { me.cards.chest = false; them.cards.chest = true; }
   };
+  const beforeA = fullSets(g, tr.from), beforeB = fullSets(g, tr.to);
   swap(tr.from, tr.to, tr.give);
   swap(tr.to, tr.from, tr.get);
   void a; void b;
@@ -1049,6 +1074,7 @@ function answerTrade(room, p, id, accept) {
   };
   log(room, pname(room, tr.from) + ' trades ' + part(tr.give, g) + ' to ' + pname(room, tr.to) + ' for ' + part(tr.get, g) + '.', 'trade');
   fx(room, 'trade', { from: tr.from, to: tr.to, give: tr.give, get: tr.get });
+  noteSets(room, tr.from, beforeA); noteSets(room, tr.to, beforeB);
   // A trade can be the thing that pays a debt: check again.
   if (g.phase === 'debt') settleDebtIfPaid(room);
 }
@@ -1129,12 +1155,13 @@ function goBankrupt(room, pid, d) {
   me.cash = 0;
   const mine = Object.keys(g.props).map(Number).filter(i => g.props[i].owner === pid);
   if (creditor) {
-    const c = P(g, creditor);
+    const c = P(g, creditor), beforeC = fullSets(g, creditor);
     c.cash += cash;
     for (const i of mine) { g.props[i].owner = creditor; if (g.props[i].m) { const due = Math.round(g.spaces[i].price / 2 * MORTGAGE_INTEREST); if (c.cash >= due) c.cash -= due; } }
     if (me.cards.chance) { c.cards.chance = true; me.cards.chance = false; }
     if (me.cards.chest) { c.cards.chest = true; me.cards.chest = false; }
     log(room, name + ' goes bankrupt. Everything goes to ' + pname(room, creditor) + ': ' + money(cash) + (mine.length ? ' and ' + mine.length + ' properties' : '') + '.', 'bankrupt');
+    noteSets(room, creditor, beforeC);
   } else {
     for (const i of mine) { delete g.props[i]; g.auctionQueue.push(i); }
     const deck = Cards.deckById(g.deck).cards;
@@ -1234,6 +1261,186 @@ function autoAct(room, force) {
   return true;
 }
 
+/* -------- completing a color group is worth a fanfare */
+
+const fullSets = (g, pid) => Object.keys(Boards.GROUPS).filter(gr => gr !== 'rail' && gr !== 'util' && Boards.members(gr).every(k => g.props[k] && g.props[k].owner === pid));
+
+function noteSets(room, pid, before) {
+  const g = room.game;
+  for (const gr of fullSets(g, pid)) if (!before.includes(gr)) {
+    log(room, pname(room, pid) + ' owns the whole ' + Boards.GROUPS[gr].name.toLowerCase() + ' set!', 'monopoly');
+    fx(room, 'monopoly', { pid, group: gr });
+  }
+}
+
+/* -------- private messages between two phones */
+
+const chatKey = (a, b) => [a, b].sort().join('|');
+
+function chat(room, p, m) {
+  const to = String(m.to || ''), other = room.players.get(to);
+  if (!other || other === p || other.bot) return;
+  const text = clean(m.text, 240);
+  if (!text) return;
+  const k = chatKey(p.id, to);
+  const list = room.chats[k] || (room.chats[k] = []);
+  list.push({ from: p.id, text, at: Date.now() });
+  if (list.length > 60) list.shift();
+}
+
+function chatsFor(room, pid) {
+  const out = {};
+  for (const k of Object.keys(room.chats)) {
+    const [a, b] = k.split('|');
+    if (a === pid || b === pid) out[a === pid ? b : a] = room.chats[k];
+  }
+  return out;
+}
+
+/* -------- bots: players the TV adds, who play a plain, sensible game */
+
+function addBot(room) {
+  if (room.game || seats(room).length >= MAX_PLAYERS) return;
+  const used = new Set([...room.players.values()].map(p => p.name));
+  const name = BOT_NAMES.find(n => !used.has(n)) || ('BOT ' + crypto.randomInt(100, 999));
+  const p = { id: rid(6), token: rid(), name, piece: freePiece(room, BOT_PIECES), bot: true, connected: true, ws: null, hold: 0, goneAt: 0 };
+  room.players.set(p.id, p);
+  room.order.push(p.id);
+  fx(room, 'joined', { name: p.name, pid: p.id, bot: true });
+}
+
+const isBot = (room, id) => { const p = room.players.get(id); return !!(p && p.bot); };
+
+// Something a bot should get round to?
+function botHasWork(room) {
+  const g = room.game;
+  if (!g || g.phase === 'gameOver') return false;
+  const a = actor(g);
+  if (a && isBot(room, a)) return true;
+  if (g.phase === 'auction' && g.auction && alive(room, g).some(id => isBot(room, id) && !g.auction.passed.includes(id) && g.auction.bidder !== id)) return true;
+  if (g.trades.some(t => isBot(room, t.to))) return true;
+  return false;
+}
+
+function scheduleBots(room) {
+  if (room.botTimer || !botHasWork(room)) return;
+  room.botTimer = setTimeout(() => {
+    room.botTimer = null;
+    if (rooms.get(room.code) !== room) return;
+    let changed = false;
+    try { changed = botTick(room); } catch (e) { console.error('bot error', e); }
+    if (changed) pushAll(room); else scheduleBots(room);
+  }, (BOT_MS + crypto.randomInt(900)) / SPEED);
+}
+
+// Steady, a little greedy: 8 bots play 8 slightly different games thanks to a per-bot "nerve".
+const nerve = (id, salt) => (crypto.createHash('sha1').update(id + '|' + (salt || '')).digest()[0] / 255);
+
+function botTick(room) {
+  const g = room.game;
+  if (!g || g.phase === 'gameOver') return false;
+  const a = actor(g);
+  if (a && isBot(room, a)) {
+    const p = room.players.get(a), me = P(g, a);
+    if (g.phase === 'turn') {
+      // Build first, one house at a time, keeping a cushion in the bank.
+      const cushion = 300 + Math.round(nerve(a, 'cushion') * 400);
+      const mine = Object.keys(g.props).map(Number).filter(i => g.props[i].owner === a && g.spaces[i].t === 'prop');
+      const target = mine.filter(i => !whyNotBuild(g, a, i) && me.cash - g.spaces[i].house >= cushion).sort((x, y) => g.spaces[y].rent[1] - g.spaces[x].rent[1])[0];
+      if (target != null) { build(room, p, target); return true; }
+      const lift = Object.keys(g.props).map(Number).find(i => g.props[i].owner === a && g.props[i].m && me.cash - liftCost(g.spaces[i]) >= cushion + 200);
+      if (lift != null) { unmortgage(room, p, lift); return true; }
+      if (botProposeTrade(room, a)) return true;
+      if (me.jail) {
+        if (me.cards.chance || me.cards.chest) useJailCard(room, p);
+        else if (me.cash >= JAIL_FINE + 200 && me.jailTurns > 0) payJail(room, p);
+        else jailRoll(room, p);
+        return true;
+      }
+      doRoll(room, p);
+      return true;
+    }
+    if (g.phase === 'buy' && g.offer) {
+      const sp = g.spaces[g.offer.space];
+      const completes = sp.t === 'prop' && Boards.members(sp.g).every(k => k === sp.i || (g.props[k] && g.props[k].owner === a));
+      const keep = completes ? 0 : 120 + Math.round(nerve(a, 'keep') * 300);
+      if (me.cash >= sp.price + keep) buy(room, p); else decline(room, p);
+      return true;
+    }
+    if (g.phase === 'debt') { autoLiquidate(room, a); return true; }
+  }
+  if (g.phase === 'auction' && g.auction) {
+    const au = g.auction, sp = g.spaces[au.space];
+    for (const id of alive(room, g)) {
+      if (!isBot(room, id) || au.passed.includes(id) || au.bidder === id) continue;
+      const p = room.players.get(id), me = P(g, id);
+      const completes = sp.t === 'prop' && Boards.members(sp.g).every(k => k === sp.i || (g.props[k] && g.props[k].owner === id));
+      const ceiling = Math.min(me.cash - 80, Math.round(sp.price * (completes ? 1.3 : 0.55 + nerve(id, 'bid' + sp.i) * 0.6)));
+      const step = au.bid < 100 ? 10 : au.bid < 300 ? 25 : 50;
+      const next = Math.max(10, au.bid + step);
+      if (next <= ceiling) bid(room, p, next); else passAuction(room, p);
+      return true;
+    }
+  }
+  const tr = g.trades.find(t => isBot(room, t.to));
+  if (tr) {
+    const p = room.players.get(tr.to);
+    answerTrade(room, p, tr.id, botLikesTrade(room, tr));
+    return true;
+  }
+  return false;
+}
+
+// A bot one property short of a set goes shopping for it now and then: cash, plus a property it
+// has no use for if the cash alone looks thin.
+function botProposeTrade(room, a) {
+  const g = room.game, me = P(g, a);
+  if (g.trades.some(t => t.from === a) || g.tradeSeq + g.turnCount > 0 && crypto.randomInt(4) !== 0) return false;
+  const mineProps = Object.keys(g.props).map(Number).filter(i => g.props[i].owner === a);
+  const want = [];
+  for (const gr of Object.keys(Boards.GROUPS)) {
+    if (gr === 'rail' || gr === 'util') continue;
+    const mem = Boards.members(gr), have = mem.filter(k => g.props[k] && g.props[k].owner === a);
+    if (have.length !== mem.length - 1) continue;
+    const miss = mem.find(k => !have.includes(k));
+    const pr = g.props[miss];
+    if (!pr || pr.owner === a || P(g, pr.owner).bankrupt || pr.h) continue;
+    want.push({ i: miss, owner: pr.owner });
+  }
+  if (!want.length) return false;
+  const pick = want[crypto.randomInt(want.length)], sp = g.spaces[pick.i];
+  let cash = Math.min(me.cash - 200, Math.round(sp.price * (1.6 + nerve(a, 'offer') * 0.8)));
+  const spare = mineProps.filter(i => { const s2 = g.spaces[i]; if (!s2.g || s2.g === 'rail' || s2.g === 'util') return false; const mem = Boards.members(s2.g); return mem.filter(k => g.props[k] && g.props[k].owner === a).length === 1 && !g.props[i].h; });
+  const props = [];
+  if (cash < sp.price * 1.5 && spare.length) { props.push(spare.sort((x, y) => g.spaces[y].price - g.spaces[x].price)[0]); cash = Math.max(0, Math.min(cash, Math.round(sp.price * 0.8))); }
+  if (cash < sp.price * 0.6 && !props.length) return false;
+  const p = room.players.get(a);
+  offerTrade(room, p, { to: pick.owner, give: { props, cash }, get: { props: [pick.i], cash: 0 }, note: 'Looking to finish the ' + Boards.GROUPS[sp.g].name.toLowerCase() + ' set' });
+  return g.trades.some(t => t.from === a);
+}
+
+// What a side of a trade is worth to the bot, and whether the deal is good enough.
+function botLikesTrade(room, tr) {
+  const g = room.game, me = tr.to;
+  const worth = (side, forMe) => {
+    let v = side.cash + (side.chance ? 40 : 0) + (side.chest ? 40 : 0);
+    for (const i of side.props) {
+      const sp = g.spaces[i], pr = g.props[i];
+      let w = pr.m ? sp.price * 0.4 : sp.price;
+      if (sp.t === 'prop') {
+        const others = Boards.members(sp.g).filter(k => k !== i);
+        const ownAfter = others.every(k => g.props[k] && g.props[k].owner === (forMe ? me : tr.from));
+        if (ownAfter) w *= 1.8;                       // it completes a set for whoever gets it
+        if (!forMe && others.every(k => g.props[k] && g.props[k].owner === me)) w *= 2.2;   // giving up a set of mine
+      }
+      v += w;
+    }
+    return v;
+  };
+  const get = worth(tr.give, true), give = worth(tr.get, false);
+  return get >= give * (1.05 + nerve(me, 'trade') * 0.2) && P(g, me).cash - tr.get.cash >= 50;
+}
+
 /* ----------------------------------------------------- lobby and TV actions */
 
 function adminAction(room, m) {
@@ -1247,11 +1454,20 @@ function adminAction(room, m) {
       if (m.mode === 'timer' || m.mode === 'last') room.settings.mode = m.mode;
       if (Number.isFinite(Number(m.minutes))) room.settings.minutes = Math.max(5, Math.min(600, Math.round(Number(m.minutes))));
       if (TURN_CHOICES.includes(m.turnSecs)) room.settings.turnSecs = m.turnSecs;
+      if (AUCTION_CHOICES.includes(m.auctionSecs)) room.settings.auctionSecs = m.auctionSecs;
       return;
     case 'custom': if (!g) { room.custom = cleanCustom(m.custom); if (!room.custom.boards.some(b => b.id === room.settings.theme) && room.settings.theme.startsWith('custom:')) room.settings.theme = 'classic'; } return;
     case 'kick': {
       const x = room.players.get(m.id);
       if (x) dropPlayer(room, x, true);
+      return;
+    }
+    case 'addBot': if (!g) addBot(room); return;
+    case 'removeBot': {
+      if (g) return;
+      const bots = seats(room).map(id => room.players.get(id)).filter(x => x.bot);
+      const x = m.id ? room.players.get(m.id) : bots[bots.length - 1];
+      if (x && x.bot) dropPlayer(room, x, true);
       return;
     }
     case 'lobby':
@@ -1267,7 +1483,7 @@ function adminAction(room, m) {
 
 function publicState(room) {
   const g = room.game;
-  const pl = id => { const p = room.players.get(id); return p ? { id: p.id, name: p.name, on: p.connected, piece: p.piece } : null; };
+  const pl = id => { const p = room.players.get(id); return p ? { id: p.id, name: p.name, on: p.connected, piece: p.piece, bot: !!p.bot } : null; };
   const theme = themeOf(room);
   const s = {
     code: room.code,
@@ -1279,7 +1495,7 @@ function publicState(room) {
     decks: Cards.DECKS.map(d => ({ id: d.id, name: d.name, blurb: d.blurb, adult: !!d.adult })),
     names: spacesOf(room).map(sp => sp.name),
     rails: theme.rails,
-    pieces: PIECES, minPlayers: MIN_PLAYERS, maxPlayers: MAX_PLAYERS, minuteChoices: MINUTE_CHOICES, turnChoices: TURN_CHOICES,
+    pieces: PIECES, minPlayers: MIN_PLAYERS, maxPlayers: MAX_PLAYERS, minuteChoices: MINUTE_CHOICES, turnChoices: TURN_CHOICES, auctionChoices: AUCTION_CHOICES,
     fx: room.fx,
     game: null
   };
@@ -1309,6 +1525,7 @@ function stateFor(room, pub, p) {
   const g = room.game;
   const playing = room.order.includes(p.id);
   s.me = { id: p.id, name: p.name, piece: p.piece, isCaptain: pub.captain === p.id, playing };
+  s.me.chats = chatsFor(room, p.id);
   if (g && playing && g.players[p.id]) {
     const me = g.players[p.id];
     s.me.cash = me.cash; s.me.pos = me.pos; s.me.jail = me.jail; s.me.jailTurns = me.jailTurns; s.me.cards = me.cards; s.me.bankrupt = me.bankrupt;
@@ -1351,6 +1568,7 @@ function pushAll(room) {
     if (p.ws && p.ws.readyState === 1) p.ws.send(JSON.stringify({ t: 'state', s: stateFor(room, pub, p) }));
   }
   queueBackup(room);
+  scheduleBots(room);
 }
 
 /* -------------------------------------------------------------- messages */
@@ -1364,7 +1582,7 @@ function dropPlayer(room, p, kicked) {
     goBankrupt(room, p.id, { pid: p.id, to: 'bank', amount: 0, reason: 'left' });
   } else if (!g && i >= 0) room.order.splice(i, 1);
   if (!g || !g.players[p.id]) room.players.delete(p.id);
-  else p.connected = false;
+  else if (!p.bot) p.connected = false;
   if (p.ws) {
     send(p.ws, { t: 'left', kicked: !!kicked });
     p.ws.room = null; p.ws.pid = null; p.ws = null;
@@ -1390,10 +1608,10 @@ function showOn(ws, room, admin) {
   room.displays.add(ws);
 }
 
-function freePiece(room) {
-  const used = new Set([...room.players.values()].map(p => p.piece));
-  for (let i = 0; i < PIECES.length; i++) if (!used.has(i)) return i;
-  return 0;
+const pieceTaken = (room, piece, except) => [...room.players.values()].some(x => x !== except && x.piece === piece);
+function freePiece(room, list) {
+  for (const pc of list || PIECES) if (!pieceTaken(room, pc, null)) return pc;
+  return (list || PIECES)[0];
 }
 
 function onMessage(ws, m) {
@@ -1443,7 +1661,8 @@ function onMessage(ws, m) {
     } else {
       if (room.game) return send(ws, { t: 'error', msg: 'That game has already started. If you were in it, use the exact name you joined with.' });
       if (room.order.length >= MAX_PLAYERS) return send(ws, { t: 'error', msg: 'This room is full: ' + MAX_PLAYERS + ' players.' });
-      p = { id: rid(6), token: rid(), name, piece: freePiece(room), connected: true, ws: null };
+      const want = cleanPiece(m.piece);
+      p = { id: rid(6), token: rid(), name, piece: want && !pieceTaken(room, want, null) ? want : freePiece(room), connected: true, ws: null };
       room.players.set(p.id, p);
       room.order.push(p.id);
       fx(room, 'joined', { name: p.name, pid: p.id });
@@ -1483,12 +1702,13 @@ function onMessage(ws, m) {
   switch (m.t) {
     case 'piece': {
       if (g) break;
-      const n = Number(m.n);
-      if (!Number.isInteger(n) || n < 0 || n >= PIECES.length) break;
-      if ([...room.players.values()].some(x => x !== p && x.piece === n)) { send(ws, { t: 'error', msg: 'Someone already has that one.' }); break; }
-      p.piece = n;
+      const pc = cleanPiece(m.piece);
+      if (!pc) { send(ws, { t: 'error', msg: 'Pick one emoji.' }); break; }
+      if (pieceTaken(room, pc, p)) { send(ws, { t: 'error', msg: 'Someone already has that one.' }); break; }
+      p.piece = pc;
       break;
     }
+    case 'chat': chat(room, p, m); break;
     case 'h':                                      // the captain's phone can start and restart
       if (captainId(room) !== p.id) break;
       if (m.a === 'start' || (m.a === 'lobby' && g && g.phase === 'gameOver')) adminAction(room, m);
@@ -1553,7 +1773,7 @@ setInterval(() => {
   }
   const now = Date.now();
   for (const [code, room] of rooms) {
-    if (now - room.touched > ROOM_IDLE_MS) { clearTimer(room); clearTimeout(room.endTimer); clearTimeout(room.backupTimer); clearTimeout(room.tidyTimer); rooms.delete(code); }
+    if (now - room.touched > ROOM_IDLE_MS) { clearTimer(room); clearTimeout(room.endTimer); clearTimeout(room.backupTimer); clearTimeout(room.tidyTimer); clearTimeout(room.botTimer); rooms.delete(code); }
   }
 }, 30000).unref();
 
@@ -1573,4 +1793,4 @@ if (require.main === module) {
   process.on('SIGINT', stop);
 }
 
-module.exports = { server, rooms, packRoom, unpackRoom, restoreRoom, loadRoom, rentFor, netWorth, PIECES, pushAll, _t: { move, charge, settle, land } };
+module.exports = { server, rooms, packRoom, unpackRoom, restoreRoom, loadRoom, rentFor, netWorth, PIECES, pushAll, cleanPiece, _t: { move, charge, settle, land } };

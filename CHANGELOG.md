@@ -6,6 +6,33 @@ glance which version a screen is running.
 
 Times are Pacific.
 
+## 1.1 · October 25, 2026
+
+**Polish, bots, chat, and more going on**
+- **Bots.** The TV can add up to 8 bots in the lobby (**+ Add a bot**). They roll, buy what they
+  can afford, bid at auctions, build on their sets, pay their debts, answer your trade offers
+  sensibly, and go shopping for the last property of a set now and then. Each one plays a
+  slightly different game.
+- **Chat.** A Chat tab on the phone: private, one-to-one messages between players. Nothing
+  shows on the TV.
+- **Any emoji as your piece.** The lobby has eight quick picks and a box for any emoji from your
+  keyboard. Your pick is remembered for next time.
+- **Bidding clock.** Set on the TV (10, 15, 20 or 30 seconds). Every bid restarts it; the TV
+  shows the countdown, calls "going once… going twice…", and ticks through the last five seconds.
+- **More happening on the TV:** money flies between players when rent and purchases change
+  hands, a SOLD stamp lands on a bought space, coins burst at GO, bars slam over the jail, the
+  screen shakes on a big rent or a bankruptcy, DOUBLES! and MONOPOLY! banners (with the set
+  lighting up and a fanfare when someone completes a color group), little houses with roofs
+  instead of squares, and new sounds for all of it.
+- **Phone cleanup.** Roomier layout; your properties are one line each, and tapping one opens
+  its card with Build / Sell / Mortgage and the reason when something isn't allowed; a cleaner
+  trade builder with +50/+100 buttons and a plain-English summary of the offer; incoming offers
+  shown side by side.
+- **Dialogs in the game's own style** on both screens: no more browser pop-ups for mortgaging,
+  bankruptcy, saving, ending a game or leaving.
+- **TV fixes:** the lobby no longer overflows its boxes, the log fills its box with no gap, the
+  "what's happening" box names the right player, plate badges no longer cover the net worth.
+
 ## 1.0 · October 25, 2026
 
 **The first version**

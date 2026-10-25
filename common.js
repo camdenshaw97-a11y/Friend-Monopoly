@@ -6,7 +6,7 @@
   // Change this to rename the game everywhere.
   F.TITLE = 'FRIEND MONOPOLY';
   // Shown small on the start screens. Goes up with every change; CHANGELOG.md says what each one was.
-  F.VERSION = '1.0';
+  F.VERSION = '1.1';
 
   F.$ = function (sel, root) { return (root || document).querySelector(sel); };
   F.esc = function (s) {
@@ -216,6 +216,34 @@
     document.addEventListener('touchstart', function () {}, { passive: true });
   };
 
+
+  /* ---- dialogs styled like the game (instead of the browser's own) ----
+     F.dialog({ title, text, buttons: [{ label, kind, value }], input: { placeholder, value, maxlength } })
+     resolves with the button's value (and, with an input, { value, text }). */
+  F.dialog = function (o) {
+    return new Promise(function (resolve) {
+      var back = document.createElement('div');
+      back.className = 'dlg-back';
+      var h = '<div class="dlg" role="dialog">' + (o.title ? '<h2>' + F.esc(o.title) + '</h2>' : '') + (o.text ? '<p>' + F.esc(o.text) + '</p>' : '');
+      if (o.input) h += '<input class="dlg-in" maxlength="' + (o.input.maxlength || 40) + '" placeholder="' + F.esc(o.input.placeholder || '') + '" value="' + F.esc(o.input.value || '') + '">';
+      h += '<div class="dlg-row">' + (o.buttons || [{ label: 'OK', kind: 'pri', value: true }]).map(function (b, i) { return '<button class="dlg-btn ' + (b.kind || '') + '" data-i="' + i + '">' + F.esc(b.label) + '</button>'; }).join('') + '</div></div>';
+      back.innerHTML = h;
+      document.body.appendChild(back);
+      var inp = back.querySelector('.dlg-in');
+      function done(v) { back.classList.add('out'); setTimeout(function () { back.remove(); }, 180); resolve(v); }
+      back.addEventListener('click', function (e) {
+        var b = e.target.closest('.dlg-btn');
+        if (b) { var bt = (o.buttons || [{ value: true }])[Number(b.getAttribute('data-i'))]; done(inp ? { value: bt.value, text: inp.value } : bt.value); }
+        else if (e.target === back && !o.input) done(o.cancel === undefined ? false : o.cancel);
+      });
+      if (inp) { setTimeout(function () { inp.focus(); inp.select(); }, 60); inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { var pri = (o.buttons || []).findIndex(function (b) { return b.kind === 'pri'; }); done({ value: pri >= 0 ? o.buttons[pri].value : true, text: inp.value }); } }); }
+      addEventListener('keydown', function esc(e) { if (e.key === 'Escape' && back.parentNode) { done(o.cancel === undefined ? false : o.cancel); removeEventListener('keydown', esc); } });
+    });
+  };
+  F.confirm = function (title, text, okLabel, danger) {
+    return F.dialog({ title: title, text: text, buttons: [{ label: okLabel || 'OK', kind: danger ? 'red' : 'pri', value: true }, { label: 'Cancel', kind: 'ghost', value: false }] });
+  };
+
   /* ---- sound effects, synthesized so there are no audio files to load ---- */
   F.sfx = (function () {
     var ctx = null, muted = false, master = null;
@@ -287,7 +315,22 @@
         [262, 330, 392].forEach(function (f) { tone({ f: f, type: 'sawtooth', t: 1.05, d: 1.2, g: 0.07 }); });
       },
       horn: function () { tone({ f: 330, type: 'sawtooth', d: 0.6, g: 0.18, hold: true }); tone({ f: 415, type: 'sawtooth', d: 0.6, g: 0.14, hold: true }); tone({ f: 494, type: 'sawtooth', t: 0.02, d: 0.58, g: 0.12, hold: true }); },
-      whoosh: function () { tone({ f: 220, f2: 880, type: 'sine', d: 0.45, g: 0.08 }); }
+      whoosh: function () { tone({ f: 220, f2: 880, type: 'sine', d: 0.45, g: 0.08 }); },
+      chaching: function () { noise(0, 0.05, 0.5, 5000); bell(2093, 0.05, 0.22); bell(2637, 0.12, 0.2); tone({ f: 1047, type: 'triangle', t: 0.18, d: 0.5, g: 0.12 }); },   // passing GO
+      coins: function () { for (var i = 0; i < 5; i++) bell(2500 + Math.random() * 1500, i * 0.06, 0.07); },
+      sting: function () { tone({ f: 110, type: 'sawtooth', d: 0.9, g: 0.28, hold: true }); tone({ f: 116, type: 'sawtooth', d: 0.9, g: 0.2, hold: true }); tone({ f: 1760, f2: 220, type: 'square', d: 0.35, g: 0.08 }); },   // a big rent
+      hammer: function () { noise(0, 0.04, 0.9, 1200); tone({ f: 180, type: 'square', d: 0.06, g: 0.12 }); noise(0.16, 0.04, 0.9, 1400); tone({ f: 200, type: 'square', t: 0.16, d: 0.06, g: 0.12 }); },
+      fanfare: function () {
+        [523, 659, 784, 1047, 1319].forEach(function (f, i) { tone({ f: f, type: 'triangle', t: i * 0.09, d: i === 4 ? 1.0 : 0.16, g: 0.24 }); });
+        [262, 330, 392, 523].forEach(function (f) { tone({ f: f, type: 'sawtooth', t: 0.36, d: 1.0, g: 0.05 }); });
+      },
+      doubles: function () { [784, 988, 1175, 1568].forEach(function (f, i) { tone({ f: f, type: 'square', t: i * 0.06, d: 0.12, g: 0.09 }); }); },
+      clang: function () { tone({ f: 420, type: 'square', d: 0.9, g: 0.16 }); tone({ f: 633, type: 'square', d: 0.6, g: 0.1 }); noise(0, 0.12, 0.9, 900); tone({ f: 70, type: 'triangle', d: 0.5, g: 0.3 }); },   // the cell door
+      crash: function () { noise(0, 0.5, 1.2, 400); noise(0.1, 0.4, 0.8, 250); tone({ f: 80, f2: 30, type: 'triangle', d: 1.2, g: 0.4 }); },
+      countdown: function () { tone({ f: 880, type: 'square', d: 0.07, g: 0.1 }); },
+      going: function () { noise(0, 0.05, 0.7, 700); tone({ f: 160, type: 'square', d: 0.08, g: 0.12 }); },
+      ping: function () { tone({ f: 1760, type: 'sine', d: 0.1, g: 0.14 }); tone({ f: 2349, type: 'sine', t: 0.1, d: 0.25, g: 0.12 }); },
+      shake: function () { for (var i = 0; i < 4; i++) noise(i * 0.09, 0.05, 0.4, 1500 + i * 200); }
     };
   })();
 

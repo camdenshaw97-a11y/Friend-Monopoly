@@ -11,11 +11,10 @@
   html, body { margin: 0; min-height: 100%; background: #0b2a1f; color: #fff; font-family: var(--text); -webkit-tap-highlight-color: transparent; }
   body { background: radial-gradient(ellipse 120% 60% at 50% 0%, #1f6b4a 0%, #134a32 45%, #0b2a1f 100%) fixed; }
   * { box-sizing: border-box; }
-  button { font-family: inherit; }
-  .view { display: none; min-height: var(--vh, 100vh); padding: max(10px, env(safe-area-inset-top)) 12px max(18px, env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; }
+  button { font-family: inherit; cursor: pointer; }
+  .view { display: none; min-height: var(--vh, 100vh); padding: max(12px, env(safe-area-inset-top)) 14px max(24px, env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; }
   .view.on { display: block; animation: vIn .3s ease-out; }
   @keyframes vIn { from { opacity: 0; transform: translateY(12px); } }
-  .disp { font-family: var(--display); font-weight: 400; letter-spacing: .04em; }
 
   /* ---- join ---- */
   .j-wrap { padding-top: 6vh; display: flex; flex-direction: column; align-items: center; }
@@ -45,147 +44,200 @@
   #join.hascode #deskTv { display: none; }
 
   /* ---- shared bits ---- */
-  .bar { display: flex; justify-content: space-between; align-items: center; font: 700 13px var(--text); letter-spacing: .08em; color: #cfe6d8; padding: 4px 4px 10px; }
+  .bar { display: flex; justify-content: space-between; align-items: center; font: 700 13px var(--text); letter-spacing: .08em; color: #cfe6d8; padding: 4px 4px 12px; }
   .bar b { color: #fff; }
-  .card { background: #0f3d2acc; border-radius: 18px; padding: 14px; margin-bottom: 12px; box-shadow: 0 10px 30px #0006, inset 0 1px 0 #ffffff22; }
+  .card { background: #0f3d2acc; border-radius: 20px; padding: 16px; margin-bottom: 14px; box-shadow: 0 10px 30px #0006, inset 0 1px 0 #ffffff22; }
   .card.mine { box-shadow: 0 0 0 2px var(--gold), 0 10px 30px #0006; }
   .card.bad { box-shadow: 0 0 0 2px var(--red), 0 10px 30px #0006; }
-  .card h3 { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 10px; font: 400 22px var(--display); letter-spacing: .06em; color: var(--gold); }
-  .card h3 small { font: 700 12px var(--text); letter-spacing: .08em; color: #9ccbb1; }
-  .who { display: flex; flex-wrap: wrap; gap: 6px; }
-  .who span { display: inline-flex; align-items: center; gap: 6px; font: 700 15px var(--text); padding: 6px 12px; border-radius: 999px; background: #ffffff14; }
+  .card.flat { padding: 6px 16px; }
+  .card h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 0 0 12px; font: 400 22px var(--display); letter-spacing: .06em; color: var(--gold); white-space: nowrap; }
+  .card h3 small { font: 700 11px var(--text); letter-spacing: .06em; color: #9ccbb1; text-align: right; white-space: normal; max-width: 55%; line-height: 1.3; }
+  .who { display: flex; flex-wrap: wrap; gap: 8px; }
+  .who span { display: inline-flex; align-items: center; gap: 7px; font: 700 15px var(--text); padding: 8px 14px; border-radius: 999px; background: #ffffff14; }
   .who span.me { background: var(--gold); color: #2a1800; }
   .who span.off { opacity: .5; }
-  .who span i { width: 22px; height: 22px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center; font-style: normal; font-size: 13px; }
+  .who span i { width: 24px; height: 24px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center; font-style: normal; font-size: 14px; }
+  .who span .tag { font: 400 11px/1 var(--display); letter-spacing: .14em; padding: 3px 6px 1px; border-radius: 999px; background: #2a8fd8; color: #fff; }
   .who em { color: #9ccbb1; }
-  .btn { display: block; width: 100%; margin-top: 10px; font: 400 26px var(--display); letter-spacing: .05em; color: #06301f; background: linear-gradient(#5ad39a, #2bbd6e); border: 0; border-radius: 999px; padding: 13px 10px 10px; box-shadow: 0 5px 0 #11603a; transition: transform .08s, box-shadow .08s, opacity .2s; }
+  .btn { display: block; width: 100%; margin-top: 10px; font: 400 26px var(--display); letter-spacing: .05em; color: #06301f; background: linear-gradient(#5ad39a, #2bbd6e); border: 0; border-radius: 999px; padding: 14px 10px 11px; box-shadow: 0 5px 0 #11603a; transition: transform .08s, box-shadow .08s, opacity .2s; }
   .btn:active:not(:disabled), .btn[data-fx-press]:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #11603a; }
   .btn.gold { color: #2a1800; background: linear-gradient(#ffe27a, #f2b01e); box-shadow: 0 5px 0 #8a5200; }
   .btn.red { color: #fff; background: linear-gradient(#ff6a60, #c41410); box-shadow: 0 5px 0 #5a0905; }
   .btn.blue { color: #fff; background: linear-gradient(#5aa5ff, #2a6fd8); box-shadow: 0 5px 0 #143a80; }
   .btn.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 2px #3d9a6f; }
-  .btn.sm { font-size: 19px; padding: 10px 8px 8px; }
+  .btn.sm { font-size: 19px; padding: 11px 8px 9px; }
   .btn.big { font-size: 34px; padding: 18px 10px 13px; }
-  .btn:disabled { opacity: .4; }
+  .btn:disabled { opacity: .4; cursor: default; }
   .btn.glow { animation: glow 1.6s ease-in-out infinite; }
   @keyframes glow { 50% { box-shadow: 0 5px 0 #8a5200, 0 0 30px #ffcc33aa; } }
-  .note { color: #cfe6d8; font-size: 14px; line-height: 1.45; margin: 10px 2px 0; text-align: center; }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .note { color: #cfe6d8; font-size: 14px; line-height: 1.5; margin: 10px 2px 0; text-align: center; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
   .row2 .btn, .row3 .btn { margin-top: 0; }
-  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
-  .label { font: 700 12px var(--text); letter-spacing: .1em; color: #9ccbb1; margin: 12px 2px 4px; }
-  .pieces { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .pieces button { aspect-ratio: 1; border: 0; border-radius: 14px; font-size: 34px; background: #ffffff14; transition: transform .1s; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .label { font: 700 12px var(--text); letter-spacing: .1em; color: #9ccbb1; margin: 14px 2px 6px; }
+  .pieces { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .pieces button { aspect-ratio: 1; border: 0; border-radius: 16px; font-size: 36px; background: #ffffff14; transition: transform .1s; }
   .pieces button.on { background: var(--gold); box-shadow: 0 0 0 3px #fff; }
-  .pieces button:disabled { opacity: .3; }
+  .pieces button:disabled { opacity: .3; cursor: default; }
+  .emojiIn { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+  .emojiIn input { width: 74px; flex: none; font-size: 30px; text-align: center; background: #fff; border: 0; border-radius: 14px; padding: 8px 4px; outline: none; }
+  .emojiIn input:focus { box-shadow: 0 0 0 3px var(--gold); }
+  .emojiIn span { flex: 1; font-size: 14px; color: #cfe6d8; line-height: 1.4; }
+  .emojiIn .btn { width: auto; margin: 0; padding: 10px 16px 8px; font-size: 18px; }
 
   /* ---- play ---- */
-  .top { display: flex; align-items: center; gap: 10px; padding: 2px 2px 10px; }
-  .top .tk { width: 44px; height: 44px; border-radius: 50%; flex: none; background: linear-gradient(var(--c1), var(--c2)); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 0 0 3px #fff3; }
-  .top .nm { font: 400 24px/1 var(--display); letter-spacing: .05em; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-top: 3px; }
-  .top .nm small { display: block; font: 700 12px var(--text); letter-spacing: .06em; color: #9ccbb1; margin-top: 3px; text-transform: none; }
-  .top .money { text-align: right; font: 800 28px/1 var(--letter); font-variant-numeric: tabular-nums; }
-  .top .money small { display: block; font: 700 11px var(--text); letter-spacing: .08em; color: #cfe6d8; margin-top: 3px; }
-  .say { text-align: center; padding: 10px 6px 6px; }
+  .top { display: flex; align-items: center; gap: 12px; padding: 4px 2px 14px; }
+  .top .tk { width: 52px; height: 52px; border-radius: 50%; flex: none; background: linear-gradient(var(--c1), var(--c2)); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 0 3px #fff3; }
+  .top .nm { font: 400 26px/1 var(--display); letter-spacing: .05em; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-top: 3px; }
+  .top .nm small { display: block; font: 700 12px var(--text); letter-spacing: .06em; color: #9ccbb1; margin-top: 4px; text-transform: none; }
+  .top .money { text-align: right; font: 800 30px/1 var(--letter); font-variant-numeric: tabular-nums; }
+  .top .money small { display: block; font: 700 11px var(--text); letter-spacing: .08em; color: #cfe6d8; margin-top: 4px; }
+  .say { text-align: center; padding: 12px 6px 8px; }
   .say b { display: block; font: 400 34px/1.05 var(--display); letter-spacing: .04em; color: var(--gold); }
-  .say span { display: block; font: 600 15px/1.4 var(--text); color: #e3f3ea; margin-top: 6px; }
+  .say span { display: block; font: 600 15px/1.45 var(--text); color: #e3f3ea; margin-top: 8px; }
   .say.good b { color: #7dffb8; } .say.bad b { color: #ff8a80; }
-  .clock { height: 8px; border-radius: 4px; background: #ffffff1f; overflow: hidden; margin: 8px 4px 0; }
+  .clock { height: 8px; border-radius: 4px; background: #ffffff1f; overflow: hidden; margin: 12px 4px 0; }
   .clock i { display: block; height: 100%; width: 100%; background: #fff; transform-origin: left; }
   .clock.hot i { background: #ff6a60; }
-  .roll { display: block; width: min(68vw, 260px); aspect-ratio: 1; margin: 14px auto 8px; border-radius: 50%; border: 0; font: 400 52px var(--display); letter-spacing: .05em; color: #2a1800; background: radial-gradient(circle at 40% 30%, #fff3b0, #ffcc33 45%, #c98a06); box-shadow: 0 12px 0 #6b3d00, 0 0 0 8px #ffffff22, 0 24px 40px #0009; transition: transform .07s, box-shadow .07s; touch-action: manipulation; }
+  .secs { text-align: center; font: 400 44px/1 var(--display); color: #fff; margin-top: 8px; }
+  .secs.hot { color: #ff8a80; animation: breathe 1s ease-in-out infinite; }
+  .roll { display: block; width: min(64vw, 240px); aspect-ratio: 1; margin: 16px auto 10px; border-radius: 50%; border: 0; font: 400 50px var(--display); letter-spacing: .05em; color: #2a1800; background: radial-gradient(circle at 40% 30%, #fff3b0, #ffcc33 45%, #c98a06); box-shadow: 0 12px 0 #6b3d00, 0 0 0 8px #ffffff22, 0 24px 40px #0009; transition: transform .07s, box-shadow .07s; touch-action: manipulation; animation: rollGlow 1.8s ease-in-out infinite; }
+  @keyframes rollGlow { 50% { box-shadow: 0 12px 0 #6b3d00, 0 0 0 14px #ffcc3333, 0 24px 40px #0009; } }
   .roll:active, .roll[data-fx-press] { transform: translateY(9px); box-shadow: 0 3px 0 #6b3d00, 0 0 0 8px #ffffff22; }
-  .roll:disabled { filter: grayscale(.9) brightness(.6); }
-  .dice { display: flex; gap: 14px; justify-content: center; margin: 8px 0 2px; }
-  .die { width: 54px; height: 54px; border-radius: 12px; background: #fff; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 7px; box-shadow: 0 4px 0 #0004; }
+  .roll:disabled { filter: grayscale(.9) brightness(.6); animation: none; }
+  .roll.spin { animation: rollSpin .6s ease-out; }
+  @keyframes rollSpin { 20% { transform: rotate(-12deg) scale(.95); } 60% { transform: rotate(10deg) scale(1.03); } }
+  .dice { display: flex; gap: 14px; justify-content: center; margin: 10px 0 2px; }
+  .die { width: 56px; height: 56px; border-radius: 12px; background: #fff; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 7px; box-shadow: 0 4px 0 #0004; }
   .die i { border-radius: 50%; background: #1b1b1b; opacity: 0; margin: 2px; }
   .die i.on { opacity: 1; }
 
-  /* a property card */
-  .deed { background: #fff; color: #1b1b1b; border-radius: 14px; overflow: hidden; margin: 6px 0 10px; box-shadow: 0 8px 20px #0006; }
-  .deed .hd { padding: 12px 14px 9px; text-align: center; font: 400 22px/1.1 var(--display); letter-spacing: .06em; }
-  .deed .hd small { display: block; font: 700 11px var(--text); letter-spacing: .14em; opacity: .85; margin-bottom: 3px; }
+  /* a property card (the deed) */
+  .deed { background: #fff; color: #1b1b1b; border-radius: 16px; overflow: hidden; margin: 8px 0 12px; box-shadow: 0 8px 20px #0006; }
+  .deed .hd { padding: 14px 14px 10px; text-align: center; font: 400 24px/1.1 var(--display); letter-spacing: .06em; }
+  .deed .hd small { display: block; font: 700 11px var(--text); letter-spacing: .14em; opacity: .85; margin-bottom: 4px; }
   .deed table { width: 100%; border-collapse: collapse; font: 600 14px var(--text); }
-  .deed td { padding: 6px 14px; border-top: 1px solid #0001; }
+  .deed td { padding: 7px 14px; border-top: 1px solid #0001; }
   .deed td:last-child { text-align: right; font-family: var(--letter); font-weight: 800; }
   .deed tr.now td { background: #ffcc3355; }
-  .deed .ft { padding: 8px 14px 10px; font: 600 12px/1.4 var(--text); color: #555; text-align: center; border-top: 1px solid #0001; }
+  .deed .ft { padding: 9px 14px 11px; font: 600 12px/1.5 var(--text); color: #555; text-align: center; border-top: 1px solid #0001; }
 
   /* tabs */
-  .tabs { display: flex; gap: 6px; margin: 4px 0 10px; }
-  .tabs button { flex: 1; border: 0; border-radius: 10px; padding: 10px 4px; font: 700 14px var(--text); color: #fff; background: #ffffff1a; position: relative; }
+  .tabs { display: flex; gap: 6px; margin: 2px 0 12px; }
+  .tabs button { flex: 1; border: 0; border-radius: 12px; padding: 11px 2px; font: 700 13.5px var(--text); color: #fff; background: #ffffff1a; position: relative; }
   .tabs button.on { background: var(--gold); color: #2a1800; }
-  .tabs button .n { position: absolute; top: -6px; right: -4px; background: var(--red); color: #fff; font: 800 11px var(--text); min-width: 20px; height: 20px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
-  .prop { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #ffffff14; }
+  .tabs button .n { position: absolute; top: -7px; right: -4px; background: var(--red); color: #fff; font: 800 11px var(--text); min-width: 20px; height: 20px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 5px; box-shadow: 0 0 0 2px #0f3d2a; }
+  /* a property row: one line */
+  .prop { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #ffffff14; min-height: 56px; }
   .prop:last-child { border-bottom: 0; }
-  .prop .sw { width: 16px; height: 34px; border-radius: 4px; flex: none; box-shadow: inset 0 0 0 1.5px #0b2a1f; }
-  .prop .sw.m { background-image: repeating-linear-gradient(45deg, #0b2a1f 0 3px, transparent 3px 6px) !important; }
-  .prop .in { flex: 1; min-width: 0; }
-  .prop .in b { display: block; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .prop .in small { display: block; color: #9ccbb1; font-size: 12px; margin-top: 2px; }
-  .prop .bs { display: flex; gap: 5px; flex: none; }
-  .prop .bs button { border: 0; border-radius: 8px; background: #ffffff1f; color: #fff; font: 700 12px var(--text); padding: 8px 9px; white-space: nowrap; }
-  .prop .bs button.b { background: #2bbd6e; color: #06301f; }
-  .prop .bs button.dim { opacity: .35; }
-  .prop.pick { cursor: pointer; }
-  .prop.pick.on { background: #ffcc3322; border-radius: 10px; padding-left: 6px; padding-right: 6px; }
-  .houses { display: inline-flex; gap: 2px; vertical-align: middle; margin-left: 6px; }
-  .houses i { width: 10px; height: 10px; border-radius: 2px; background: #2fbd5e; }
-  .houses i.h { width: 22px; background: var(--red); }
-  .bids { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
-  .bids .btn { margin-top: 0; font-size: 20px; }
+  .prop .sw { width: 18px; height: 38px; border-radius: 5px; flex: none; box-shadow: inset 0 0 0 1.5px #0b2a1f; position: relative; }
+  .prop .sw.m { background-image: repeating-linear-gradient(45deg, #0b2a1f 0 3px, transparent 3px 6px) !important; opacity: .7; }
+  .prop .in { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+  .prop .in b { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .prop .in.dim b { color: #9ccbb1; text-decoration: line-through; text-decoration-color: #9ccbb188; }
+  .prop .rt { flex: none; font: 800 15px var(--letter); color: #e3f3ea; font-variant-numeric: tabular-nums; }
+  .prop .rt small { display: block; font: 700 10px var(--text); letter-spacing: .08em; color: #9ccbb1; text-align: right; }
+  .prop .chev { flex: none; color: #9ccbb1; font-size: 20px; padding-left: 2px; }
+  .prop.pick { cursor: pointer; border-radius: 12px; padding-left: 8px; padding-right: 8px; margin: 0 -8px; border-bottom-color: transparent; }
+  .prop.pick + .prop.pick { border-top: 1px solid #ffffff14; }
+  .prop.pick.on { background: #ffcc3322; box-shadow: inset 0 0 0 2px var(--gold); }
+  .prop.pick .ck { width: 30px; height: 30px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; background: #ffffff1f; font-weight: 900; color: #fff; }
+  .prop.pick.on .ck { background: var(--gold); color: #2a1800; }
+  .houses { display: inline-flex; gap: 3px; vertical-align: middle; flex: none; }
+  .houses i { width: 11px; height: 10px; border-radius: 0 0 2px 2px; background: #2fbd5e; position: relative; margin-top: 5px; }
+  .houses i::before { content: ""; position: absolute; left: -1px; right: -1px; top: -5px; height: 5px; background: #1a8f45; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .houses i.h { width: 26px; background: var(--red); } .houses i.h::before { background: #9b120b; }
+  .acts { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
+  .acts .btn { margin-top: 0; display: flex; justify-content: space-between; align-items: center; padding-left: 22px; padding-right: 22px; font-size: 23px; }
+  .acts .btn b { font: 800 18px var(--letter); }
+  .acts .why { grid-column: 1 / -1; color: #ffb4ae; font-size: 13px; text-align: center; line-height: 1.4; min-height: 18px; }
+  .bids { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .bids .btn { margin-top: 0; font-size: 21px; }
   .custom { display: flex; gap: 8px; margin-top: 10px; }
-  .custom input { flex: 1; min-width: 0; font: 800 20px var(--letter); color: #111; background: #fff; border: 0; border-radius: 12px; padding: 10px 12px; outline: none; }
+  .custom input { flex: 1; min-width: 0; font: 800 20px var(--letter); color: #111; background: #fff; border: 0; border-radius: 12px; padding: 12px 12px; outline: none; }
   .custom .btn { width: auto; margin: 0; padding: 10px 18px 8px; }
-  .cashIn { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-  .cashIn input { flex: 1; min-width: 0; font: 800 18px var(--letter); color: #111; background: #fff; border: 0; border-radius: 10px; padding: 9px 12px; outline: none; }
-  .cashIn span { font-weight: 700; color: #cfe6d8; font-size: 14px; }
-  .plist div { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #ffffff14; }
-  .plist div:last-child { border-bottom: 0; }
-  .plist .tk { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; flex: none; background: linear-gradient(var(--c1), var(--c2)); }
-  .plist .nm { flex: 1; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .plist .nm small { display: block; color: #9ccbb1; font-weight: 600; font-size: 12px; }
-  .plist .cash { font: 800 17px var(--letter); white-space: nowrap; }
-  .plist .cash small { display: block; font: 700 10px var(--text); letter-spacing: .06em; color: #9ccbb1; text-align: right; }
-  .chips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+  .cashRow { display: flex; align-items: center; gap: 8px; margin: 8px 0 2px; }
+  .cashRow .inw { flex: 1; display: flex; align-items: center; background: #fff; border-radius: 12px; padding: 0 12px; }
+  .cashRow .inw span { font: 800 18px var(--letter); color: #666; }
+  .cashRow input { flex: 1; min-width: 0; width: 100%; font: 800 20px var(--letter); color: #111; background: transparent; border: 0; padding: 11px 6px; outline: none; }
+  .cashRow button { border: 0; border-radius: 10px; background: #ffffff1f; color: #fff; font: 800 14px var(--text); padding: 12px 10px; flex: none; }
+  .cashRow small { color: #9ccbb1; font-weight: 700; font-size: 12px; flex: none; }
+  .sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 10px; }
+  .side { background: #ffffff0f; border-radius: 14px; padding: 10px 12px; }
+  .side h4 { margin: 0 0 6px; font: 700 11px var(--text); letter-spacing: .12em; color: #9ccbb1; }
+  .side div { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; padding: 3px 0; }
+  .side div i { width: 12px; height: 20px; border-radius: 3px; flex: none; box-shadow: inset 0 0 0 1px #0b2a1f; }
+  .side em { color: #9ccbb1; font-style: normal; font-weight: 600; }
+  .offerSum { text-align: center; font-size: 14px; color: #cfe6d8; margin-top: 6px; line-height: 1.45; }
+  .plist div.pr { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #ffffff14; }
+  .plist div.pr:last-child { border-bottom: 0; }
+  .plist .tk { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px; flex: none; background: linear-gradient(var(--c1), var(--c2)); }
+  .plist .nm { flex: 1; min-width: 0; font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .plist .nm small { display: block; color: #9ccbb1; font-weight: 600; font-size: 12px; margin-top: 2px; }
+  .plist .cash { font: 800 18px var(--letter); white-space: nowrap; text-align: right; }
+  .plist .cash small { display: block; font: 700 10px var(--text); letter-spacing: .06em; color: #9ccbb1; }
+  .chips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
   .chips i { width: 14px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px #0b2a1f; }
   .chips i.m { opacity: .45; }
   .chips i.rail { background: #222; } .chips i.util { background: #8a8f99; }
-  .logl div { font: 600 14px/1.4 var(--text); color: #cfe6d8; padding: 5px 0; border-bottom: 1px solid #ffffff0f; }
-  .logl div.rent, .logl div.tax, .logl div.debt, .logl div.bankrupt, .logl div.jail { color: #ffb4ae; } .logl div.buy, .logl div.go, .logl div.pay { color: #a9f0c5; } .logl div.card { color: #ffd98a; } .logl div.trade { color: #9fd3ff; }
-  .cardtext { background: #fff; color: #1b1b1b; border-radius: 14px; padding: 14px; font: 700 16px/1.4 var(--text); text-align: center; margin: 8px 0 4px; }
+  .logl div { font: 600 14px/1.45 var(--text); color: #cfe6d8; padding: 6px 0; border-bottom: 1px solid #ffffff0f; }
+  .logl div.rent, .logl div.tax, .logl div.debt, .logl div.bankrupt, .logl div.jail { color: #ffb4ae; } .logl div.buy, .logl div.go, .logl div.pay { color: #a9f0c5; } .logl div.card { color: #ffd98a; } .logl div.trade { color: #9fd3ff; } .logl div.monopoly { color: var(--gold); }
+  .cardtext { background: #fff; color: #1b1b1b; border-radius: 16px; padding: 16px; font: 700 16px/1.45 var(--text); text-align: center; margin: 8px 0 4px; animation: cardIn .45s cubic-bezier(.2, 1.3, .4, 1); }
+  @keyframes cardIn { from { transform: rotateY(90deg) scale(.7); opacity: 0; } }
   .cardtext small { display: block; font: 400 18px var(--display); letter-spacing: .14em; margin-bottom: 6px; }
   .cardtext.chance small { color: #e07b10; } .cardtext.chest small { color: #2a8fd8; }
-  .ranks div { display: flex; justify-content: space-between; padding: 8px 2px; border-bottom: 1px solid #ffffff14; font-weight: 700; }
+  .ranks div { display: flex; justify-content: space-between; padding: 9px 2px; border-bottom: 1px solid #ffffff14; font-weight: 700; }
   .ranks div b { font-family: var(--letter); }
   .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
   .stats div { background: #ffffff10; border-radius: 12px; padding: 10px 6px; text-align: center; font: 700 11px var(--text); letter-spacing: .06em; color: #cfe6d8; }
   .stats div b { display: block; font: 400 24px var(--display); color: #fff; letter-spacing: .02em; margin-bottom: 2px; }
-  .award { display: inline-block; font: 700 12px var(--text); letter-spacing: .06em; background: var(--gold); color: #2a1800; border-radius: 999px; padding: 4px 10px; margin: 0 4px 4px 0; }
-  .side { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .side h4 { margin: 0 0 4px; font: 700 12px var(--text); letter-spacing: .1em; color: #9ccbb1; }
-  .side ul { margin: 0; padding: 0 0 0 14px; font-size: 14px; line-height: 1.45; }
-  .side ul li { list-style: disc; }
+  .award { display: inline-block; font: 700 12px var(--text); letter-spacing: .06em; background: var(--gold); color: #2a1800; border-radius: 999px; padding: 5px 11px; margin: 0 4px 4px 0; }
+  .setupTxt { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .setupTxt h4 { margin: 0 0 4px; font: 700 12px var(--text); letter-spacing: .1em; color: #9ccbb1; }
+  .setupTxt ul { margin: 0; padding: 0 0 0 14px; font-size: 14px; line-height: 1.5; }
+
+  /* chat */
+  .chatList div.row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #ffffff14; cursor: pointer; }
+  .chatList div.row:last-child { border-bottom: 0; }
+  .chatList .tk { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex: none; background: linear-gradient(var(--c1), var(--c2)); }
+  .chatList .nm { flex: 1; min-width: 0; font-weight: 700; font-size: 16px; }
+  .chatList .nm small { display: block; color: #9ccbb1; font-weight: 600; font-size: 13px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chatList .n { background: var(--red); color: #fff; font: 800 12px var(--text); min-width: 22px; height: 22px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+  .chatHead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .chatHead button { border: 0; background: #ffffff1a; color: #fff; border-radius: 10px; padding: 8px 12px; font-weight: 800; }
+  .chatHead b { flex: 1; font: 400 22px var(--display); letter-spacing: .05em; }
+  .msgs { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow: auto; padding: 4px 0; }
+  .msg { max-width: 82%; padding: 9px 13px; border-radius: 16px; font-size: 15px; line-height: 1.4; background: #ffffff18; align-self: flex-start; border-bottom-left-radius: 4px; word-wrap: break-word; }
+  .msg.me { align-self: flex-end; background: var(--gold); color: #2a1800; border-bottom-left-radius: 16px; border-bottom-right-radius: 4px; }
+  .msg small { display: block; font-size: 10px; opacity: .6; margin-top: 2px; }
+  .chatIn { display: flex; gap: 8px; margin-top: 10px; }
+  .chatIn input { flex: 1; min-width: 0; font: 600 16px var(--text); color: #111; background: #fff; border: 0; border-radius: 999px; padding: 12px 16px; outline: none; }
+  .chatIn .btn { width: auto; margin: 0; padding: 10px 18px 8px; font-size: 20px; }
+  .empty { text-align: center; color: #9ccbb1; font-size: 14px; padding: 16px 6px; line-height: 1.5; }
 
   #pop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 50; pointer-events: none; }
   #pop.on { display: flex; }
-  #pop > div { padding: 22px 28px 18px; border-radius: 24px; text-align: center; animation: popIn .32s cubic-bezier(.2, 1.4, .4, 1); max-width: 88vw; }
+  #pop > div { padding: 24px 30px 20px; border-radius: 26px; text-align: center; animation: popIn .32s cubic-bezier(.2, 1.4, .4, 1); max-width: 88vw; }
   #pop.out > div { animation: popOut .25s ease-in forwards; }
   @keyframes popIn { from { transform: scale(.3); opacity: 0; } }
   @keyframes popOut { to { transform: scale(.8); opacity: 0; } }
-  #pop b { display: block; font: 400 44px/1 var(--display); letter-spacing: .03em; }
-  #pop span { display: block; font: 700 16px var(--text); margin-top: 6px; }
+  #pop b { display: block; font: 400 46px/1 var(--display); letter-spacing: .03em; }
+  #pop span { display: block; font: 700 16px var(--text); margin-top: 8px; }
   #pop.good > div { color: #06301f; background: linear-gradient(#7dffb8, #2bbd6e); box-shadow: 0 0 0 5px #fff, 0 20px 50px #000c; }
   #pop.bad > div { color: #fff; background: linear-gradient(#333, #000); box-shadow: 0 0 0 5px var(--red), 0 20px 50px #000c; }
   #pop.turn > div { color: #2a1800; background: linear-gradient(#ffe27a, #f2b01e); box-shadow: 0 0 0 5px #fff, 0 20px 50px #000c; }
-  #toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0b2a1f; color: #fff; font-weight: 700; font-size: 15px; padding: 10px 18px; border-radius: 999px; box-shadow: 0 0 0 2px var(--gold), 0 10px 30px #000a; z-index: 60; display: none; max-width: 92vw; text-align: center; }
+  #pop.mono > div { color: var(--mi, #fff); background: var(--mc, #fff); box-shadow: 0 0 0 5px #fff, 0 20px 50px #000c, 0 0 60px var(--mc, #fff); }
+  #toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0b2a1f; color: #fff; font-weight: 700; font-size: 15px; padding: 11px 18px; border-radius: 999px; box-shadow: 0 0 0 2px var(--gold), 0 10px 30px #000a; z-index: 60; display: none; max-width: 92vw; text-align: center; }
   #toast.on { display: block; animation: popIn .25s ease-out; }
   #toast.out { animation: popOut .2s ease-in forwards; }
   #offline { position: fixed; left: 50%; top: max(8px, env(safe-area-inset-top)); transform: translateX(-50%); background: #7a1512; color: #fff; font-weight: 700; font-size: 14px; padding: 7px 16px; border-radius: 999px; z-index: 70; display: none; white-space: nowrap; }
   #offline.on { display: block; }
-  .modal { position: fixed; inset: 0; z-index: 80; background: #0b2a1ff2; overflow: auto; padding: max(14px, env(safe-area-inset-top)) 12px 30px; animation: vIn .25s ease-out; }
-  .modal.out { animation: popOut .2s ease-in forwards; }
-  .modal .in { max-width: 560px; margin: 0 auto; }
+  /* the property sheet slides up from the bottom */
+  .sheetBack { position: fixed; inset: 0; z-index: 80; background: #04150ecc; display: flex; align-items: flex-end; justify-content: center; animation: dlgIn .2s ease-out; }
+  .sheetBack.out { animation: dlgOut .18s ease-in forwards; pointer-events: none; }
+  .sheet { width: 100%; max-width: 560px; max-height: 92vh; overflow: auto; background: linear-gradient(#17553b, #0f3d2a); border-radius: 24px 24px 0 0; padding: 14px 16px max(20px, env(safe-area-inset-bottom)); box-shadow: 0 -10px 40px #000a; animation: sheetUp .3s cubic-bezier(.2, 1, .4, 1); }
+  @keyframes sheetUp { from { transform: translateY(60px); opacity: 0; } }
+  .sheet .grip { width: 44px; height: 5px; border-radius: 3px; background: #ffffff33; margin: 0 auto 10px; }
 </style>
 </head>
 <body>
@@ -229,7 +281,7 @@
   var S = null, me = null, conn = null, hello = null, lastSeq = null;
   var triedRejoinByName = false, typed = false;
   var waiting = false, waited = false, waitTimer = null, online = false, LIVE_MS = 15 * 60 * 1000;
-  var ui = { tab: 'props', trade: null, deed: null, modal: null };   // what this phone has open
+  var ui = { tab: 'props', trade: null, sheet: null, chatWith: null, piece: '' };   // what this phone has open
   var COLORS = F.COLORS;
   var LOGO = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="92" height="92" rx="10" fill="#f3ead3" stroke="#0b2a1f" stroke-width="5"/><rect x="4" y="4" width="92" height="22" rx="10" fill="#e02b2b"/><rect x="4" y="18" width="92" height="8" fill="#e02b2b"/><rect x="22" y="40" width="56" height="44" rx="6" fill="#1f6b4a"/><path d="M50 36 L30 55 L70 55 Z" fill="#2fbd5e"/><rect x="42" y="60" width="16" height="24" rx="3" fill="#ffcc33"/><circle cx="83" cy="80" r="10" fill="#ffcc33" stroke="#0b2a1f" stroke-width="3"/><text x="83" y="85" font-family="Impact, Arial Narrow, sans-serif" font-size="15" text-anchor="middle" fill="#0b2a1f">$</text></svg>';
 
@@ -277,8 +329,9 @@
   function buzzPhone(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* ignore */ } }
   function send(m) { if (!conn || !conn.send(m)) toast('Reconnecting… try again in a second'); }
   function idx(id) { var i = -1; (S ? S.players : []).forEach(function (p, k) { if (p.id === id) i = k; }); return i; }
-  function pname(id) { var i = idx(id); return i >= 0 ? S.players[i].name : '?'; }
-  function piece(id) { var i = idx(id); return i >= 0 ? S.pieces[S.players[i].piece] : ''; }
+  function player(id) { var i = idx(id); return i >= 0 ? S.players[i] : null; }
+  function pname(id) { var p = player(id); return p ? p.name : '?'; }
+  function piece(id) { var p = player(id); return p ? p.piece : ''; }
   function colorOf(id) { var i = idx(id); return COLORS[(i < 0 ? 0 : i) % COLORS.length]; }
   function nameOfSpace(i) { return S.names[i]; }
   function G() { return S.game; }
@@ -315,7 +368,7 @@
     joinBusy(true);
     var nm = nameIn.value.trim();
     if (sess && sess.token && sess.code === codeIn.value && sess.name === nm.toUpperCase()) { triedRejoinByName = false; start({ t: 'rejoin', code: sess.code, token: sess.token }); }
-    else start({ t: 'join', code: codeIn.value, name: nm });
+    else start({ t: 'join', code: codeIn.value, name: nm, piece: F.store.get('mon.piece', '') });
   });
   var busyTimer;
   function joinBusy(on) {
@@ -338,9 +391,9 @@
   }
   function backToJoin(msg) {
     stopWaiting();
-    S = null; me = null; hello = null; sess = null; ui = { tab: 'props', trade: null, deed: null, modal: null };
+    S = null; me = null; hello = null; sess = null; ui = { tab: 'props', trade: null, sheet: null, chatWith: null, piece: '' };
     F.store.del('mon.me');
-    closeModal(true); hidePop(); joinBusy(false);
+    closeSheet(true); hidePop(); joinBusy(false);
     show('join');
     $('#joinErr').textContent = msg || '';
     if (msg) F.shake($('#joinForm'));
@@ -387,31 +440,55 @@
   setInterval(function () { if (S && sess && online) { sess.at = Date.now(); F.store.set('mon.me', sess); } }, 60000);
 
   /* ----------------------------------------------------------- render */
-  var lastPhase = null, lastTurn = false, lastOffer = null;
+  var lastPhase = null, lastTurn = false, lastOffer = null, lastChatCount = {};
   function render(fresh) {
     var has = {};
     fresh.forEach(function (e) { has[e.type] = e; });
     if (has.restored) toast('We’re back. Right where we left off.');
     if (has.loaded) toast('Picked up where you left off. Welcome back.');
-    if (S.phase === 'lobby') { closeModal(true); hidePop(); renderLobby(); show('lobby'); lastPhase = 'lobby'; return; }
+    chatPings();
+    if (S.phase === 'lobby') { closeSheet(true); hidePop(); renderLobby(); show('lobby'); lastPhase = 'lobby'; return; }
     show('play');
     renderPlay(has);
-    if (ui.modal) renderModal();
+    if (ui.sheet) renderSheet();
     lastPhase = S.phase;
+  }
+
+  /* ------------------------------------------------------------ chat bookkeeping */
+  function seenKey() { return 'mon.seen.' + (S ? S.code : ''); }
+  function seen() { return F.store.get(seenKey(), {}); }
+  function unreadFrom(peer) {
+    var list = (me.chats || {})[peer] || [], sn = seen()[peer] || 0, n = 0;
+    list.forEach(function (m, k) { if (k >= sn && m.from === peer) n++; });
+    return n;
+  }
+  function markSeen(peer) { var s = seen(); s[peer] = ((me.chats || {})[peer] || []).length; F.store.set(seenKey(), s); }
+  function unreadTotal() { var n = 0; Object.keys(me.chats || {}).forEach(function (p) { n += unreadFrom(p); }); return n; }
+  function chatPings() {
+    if (!me) return;
+    Object.keys(me.chats || {}).forEach(function (peer) {
+      var list = me.chats[peer], was = lastChatCount[peer] || 0;
+      if (list.length > was && was > 0 && list[list.length - 1].from === peer) {
+        if (ui.tab === 'chat' && ui.chatWith === peer) markSeen(peer);
+        else { sfx.ping(); buzzPhone(40); toast(pname(peer) + ': ' + list[list.length - 1].text.slice(0, 60)); }
+      }
+      lastChatCount[peer] = list.length;
+    });
   }
 
   /* ------------------------------------------------------------ lobby */
   function renderLobby() {
     var h = '<div class="bar"><span>ROOM <b>' + esc(S.code) + '</b></span><span>' + esc(me.name) + (me.isCaptain ? ' · CAPTAIN' : '') + '</span></div>';
-    h += '<div class="card mine" data-key="piece"><h3><span>YOUR PIECE</span><small>TAP TO PICK</small></h3><div class="pieces">' +
-      S.pieces.map(function (pc, n) { var taken = S.players.filter(function (p) { return p.piece === n && p.id !== me.id; })[0]; return '<button data-a="piece" data-n="' + n + '" class="' + (me.piece === n ? 'on' : '') + '"' + (taken ? ' disabled title="' + esc(taken.name) + '"' : '') + '>' + pc + '</button>'; }).join('') + '</div></div>';
+    h += '<div class="card mine" data-key="piece"><h3><span>YOUR PIECE</span><small>' + esc(me.piece) + ' · TAP TO CHANGE</small></h3><div class="pieces">' +
+      S.pieces.map(function (pc) { var taken = S.players.filter(function (p) { return p.piece === pc && p.id !== me.id; })[0]; return '<button data-a="piece" data-p="' + esc(pc) + '" class="' + (me.piece === pc ? 'on' : '') + '"' + (taken ? ' disabled title="' + esc(taken.name) + '"' : '') + '>' + pc + '</button>'; }).join('') + '</div>';
+    h += '<div class="emojiIn"><input id="emojiIn" data-key="emojiIn" maxlength="8" placeholder="🙂" inputmode="text" value="' + esc(ui.piece) + '"><span>Or any emoji from your keyboard.</span><button class="btn gold" data-a="pieceCustom">Use it</button></div></div>';
     h += '<div class="card" data-key="players"><h3><span>PLAYERS</span><small>' + S.players.length + ' OF ' + S.maxPlayers + '</small></h3><div class="who">' +
-      (S.players.length ? S.players.map(function (p) { return '<span class="' + (p.id === me.id ? 'me' : '') + (p.on ? '' : ' off') + '"><i style="background:' + colorOf(p.id)[0] + '">' + esc(S.pieces[p.piece]) + '</i>' + esc(p.name) + '</span>'; }).join('') : '<em>Nobody yet</em>') + '</div>';
+      (S.players.length ? S.players.map(function (p) { return '<span class="' + (p.id === me.id ? 'me' : '') + (p.on ? '' : ' off') + '"><i style="background:' + colorOf(p.id)[0] + '">' + esc(p.piece) + '</i>' + esc(p.name) + (p.bot ? '<span class="tag">BOT</span>' : '') + '</span>'; }).join('') : '<em>Nobody yet</em>') + '</div>';
     h += '<p class="note">The TV picks the board, the cards and how the game ends. ' + (me.isCaptain ? 'You can start it from here or from the TV.' : 'The TV, or ' + esc(pname(S.captain)) + ', starts it.') + '</p>';
     if (me.isCaptain) h += '<button class="btn gold big' + (S.players.length >= S.minPlayers ? ' glow' : '') + '" data-a="start"' + (S.players.length >= S.minPlayers ? '' : ' disabled') + '>Start the game</button>';
     h += '</div>';
     var st = S.settings, th = S.themes.filter(function (t) { return t.id === st.theme; })[0], dk = S.decks.filter(function (d) { return d.id === st.deck; })[0];
-    h += '<div class="card" data-key="setup"><h3><span>THIS GAME</span></h3><div class="side"><div><h4>BOARD</h4><ul><li>' + esc(th ? th.name : '') + '</li><li>' + esc(dk ? dk.name : '') + ' cards</li></ul></div><div><h4>ENDS</h4><ul><li>' + (st.mode === 'timer' ? 'after ' + st.minutes + ' minutes, richest wins' : 'last player standing') + '</li>' + (st.turnSecs ? '<li>' + st.turnSecs + 's turn clock</li>' : '') + '</ul></div></div></div>';
+    h += '<div class="card" data-key="setup"><h3><span>THIS GAME</span></h3><div class="setupTxt"><div><h4>BOARD</h4><ul><li>' + esc(th ? th.name : '') + '</li><li>' + esc(dk ? dk.name : '') + ' cards</li></ul></div><div><h4>ENDS</h4><ul><li>' + (st.mode === 'timer' ? 'after ' + st.minutes + ' minutes, richest wins' : 'last player standing') + '</li>' + (st.turnSecs ? '<li>' + st.turnSecs + 's turn clock</li>' : '') + '<li>' + st.auctionSecs + 's bidding clock</li></ul></div></div></div>';
     h += '<a class="link" href="#" data-a="leave" style="display:block;text-align:center;margin:18px 0 8px;color:#9ccbb1;font-size:14px">Leave this room</a>';
     F.morph($('#lobby'), h);
   }
@@ -419,13 +496,19 @@
   /* ------------------------------------------------------------- play */
   var PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
   function die(n) { return '<div class="die">' + [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (k) { return '<i class="' + ((PIPS[n] || []).indexOf(k) >= 0 ? 'on' : '') + '"></i>'; }).join('') + '</div>'; }
-  function swatch(i, cls) {
-    var sp = B.LAYOUT[i];
-    var col = sp.t === 'prop' ? B.GROUPS[sp.g].color : sp.t === 'rail' ? '#222' : '#8a8f99';
-    return '<i class="' + (cls || '') + '" style="background:' + col + '"></i>';
+  function colOf(i) { var sp = B.LAYOUT[i]; return sp.t === 'prop' ? B.GROUPS[sp.g].color : sp.t === 'rail' ? '#222' : '#8a8f99'; }
+  function swatch(i, cls) { return '<i class="' + (cls || '') + '" style="background:' + colOf(i) + '"></i>'; }
+  function houseHtml(h) { return h ? '<span class="houses">' + (h === 5 ? '<i class="h"></i>' : new Array(h + 1).join('<i></i>')) + '</span>' : ''; }
+  function rentNow(i) {
+    var g = G(), sp = B.LAYOUT[i], pr = g.props[i];
+    var owned = B.members(sp.g).filter(function (k) { return g.props[k] && g.props[k].owner === pr.owner; }).length;
+    if (sp.t === 'rail') return 25 * Math.pow(2, owned - 1);
+    if (sp.t === 'util') return 7 * (owned === 2 ? 10 : 4);
+    if (pr.h) return sp.rent[pr.h];
+    return sp.rent[0] * (owned === B.members(sp.g).length ? 2 : 1);
   }
-  function deed(i, opts) {
-    var sp = B.LAYOUT[i], g = G(), pr = g.props[i], col = sp.t === 'prop' ? B.GROUPS[sp.g].color : sp.t === 'rail' ? '#222' : '#8a8f99', ink = sp.t === 'prop' ? B.GROUPS[sp.g].ink : '#fff';
+  function deed(i) {
+    var sp = B.LAYOUT[i], g = G(), pr = g.props[i], col = colOf(i), ink = sp.t === 'prop' ? B.GROUPS[sp.g].ink : '#fff';
     var rows = F.rentRows(sp, S.rails);
     var owned = pr ? B.members(sp.g).filter(function (k) { return g.props[k] && g.props[k].owner === pr.owner; }).length : 0;
     var nowRow = -1;
@@ -433,13 +516,12 @@
     var h = '<div class="deed"><div class="hd" style="background:' + col + ';color:' + ink + '"><small>' + esc(sp.t === 'prop' ? B.GROUPS[sp.g].name : sp.t === 'rail' ? S.rails : 'Utility') + '</small>' + esc(nameOfSpace(i)) + '</div><table>';
     rows.forEach(function (r, k) { h += '<tr class="' + (k === nowRow ? 'now' : '') + '"><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>'; });
     h += '</table><div class="ft">' + (sp.t === 'prop' ? 'Houses cost ' + money(sp.house) + ' each · ' : '') + 'Mortgage value ' + money(sp.price / 2) + (pr ? ' · Owned by ' + esc(pname(pr.owner)) + (pr.m ? ' (mortgaged)' : '') : ' · Price ' + money(sp.price)) + '</div></div>';
-    void opts;
     return h;
   }
 
   function renderPlay(has) {
     var g = G(), c = colorOf(me.id);
-    var h = '<div class="top" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(me.piece != null ? S.pieces[me.piece] : '') + '</span><div class="nm">' + esc(me.name) + '<small>' + (me.bankrupt ? 'BANKRUPT' : esc(nameOfSpace(me.pos)) + (me.jail ? ' · IN JAIL' : '')) + '</small></div><div class="money"><span data-key="myCash" data-live>' + money(me.cash) + '</span><small>NET ' + money((g.players[me.id] || {}).net || 0) + '</small></div></div>';
+    var h = '<div class="top" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(me.piece || '') + '</span><div class="nm">' + esc(me.name) + '<small>' + (me.bankrupt ? 'BANKRUPT' : esc(nameOfSpace(me.pos)) + (me.jail ? ' · IN JAIL' : '')) + '</small></div><div class="money"><span data-key="myCash" data-live>' + money(me.cash) + '</span><small>NET ' + money((g.players[me.id] || {}).net || 0) + '</small></div></div>';
     h += mainCard(has);
     h += tabs();
     F.morph($('#play'), h);
@@ -457,7 +539,7 @@
     if (me.debt) {
       var d = me.debt, short = d.amount - me.cash;
       h = '<div class="card bad" data-key="main"><div class="say bad"><b>YOU OWE ' + money(d.amount) + '</b><span>' + esc(d.to === 'bank' ? 'to the bank' : d.to === 'each' ? 'to everyone' : 'to ' + pname(d.to)) + ' · ' + esc(d.reason) + '</span></div>';
-      if (short > 0) h += '<p class="note">You have ' + money(me.cash) + '. Raise ' + money(short) + ' more: sell buildings or mortgage below, or make a trade.</p>';
+      if (short > 0) h += '<p class="note">You have ' + money(me.cash) + '. Raise ' + money(short) + ' more: tap a property below to sell buildings or mortgage it, or make a trade.</p>';
       h += '<button class="btn gold big" data-a="payDebt"' + (short > 0 ? ' disabled' : '') + '>Pay ' + money(d.amount) + '</button>';
       if (d.liquid < d.amount) h += '<button class="btn red sm" data-a="bankrupt">Declare bankruptcy</button><p class="note">Even selling everything you only get to ' + money(d.liquid) + '. A trade could still save you.</p>';
       h += clockHtml() + '</div>';
@@ -467,12 +549,12 @@
       var sp = B.LAYOUT[me.offer];
       h = '<div class="card mine" data-key="main"><div class="say"><b>' + esc(nameOfSpace(me.offer)) + '</b><span>You landed here. Buy it for ' + money(sp.price) + ', or let it go to auction.</span></div>' + deed(me.offer);
       h += '<div class="row2"><button class="btn gold" data-a="buy"' + (me.cash < sp.price ? ' disabled' : '') + '>Buy ' + money(sp.price) + '</button><button class="btn ghost" data-a="decline">Auction it</button></div>';
-      if (me.cash < sp.price) h += '<p class="note">You have ' + money(me.cash) + '. Mortgage something below first if you want it.</p>';
+      if (me.cash < sp.price) h += '<p class="note">You have ' + money(me.cash) + '. Mortgage something first if you want it.</p>';
       return h + clockHtml() + '</div>';
     }
     if (S.phase === 'auction' && g.auction) {
       var a = g.auction, top = a.bid, mineTop = a.bidder === me.id, passed = !me.inAuction;
-      h = '<div class="card' + (mineTop ? ' mine' : '') + '" data-key="main"><div class="say"><b>AUCTION</b><span>' + esc(nameOfSpace(a.space)) + ' · ' + (a.bidder ? 'high bid ' + money(a.bid) + ' from ' + (mineTop ? 'you' : esc(pname(a.bidder))) : 'no bids yet') + '</span></div>' + deed(a.space);
+      h = '<div class="card' + (mineTop ? ' mine' : '') + '" data-key="main"><div class="say"><b>AUCTION</b><span>' + esc(nameOfSpace(a.space)) + ' · ' + (a.bidder ? 'high bid ' + money(a.bid) + ' from ' + (mineTop ? 'you' : esc(pname(a.bidder))) : 'no bids yet') + '</span></div>' + secsHtml() + deed(a.space);
       if (passed) h += '<p class="note">You passed on this one.</p>';
       else if (mineTop) h += '<p class="note">You’re the high bidder. Hold tight.</p>';
       else {
@@ -505,7 +587,7 @@
       case 'pause': what = g.log.length ? g.log[g.log.length - 1].text : ''; break;
     }
     h = '<div class="card" data-key="main"><div class="say"><b>' + esc(S.phase === 'card' && g.card ? (g.card.which === 'chance' ? 'CHANCE' : 'COMMUNITY CHEST') : cur.toUpperCase() + "'S TURN") + '</b><span>' + esc(what) + '</span></div>' + dice;
-    if (S.phase === 'card' && g.card) h += '<div class="cardtext ' + g.card.which + '">' + esc(g.card.text) + '</div>';
+    if (S.phase === 'card' && g.card) h += '<div class="cardtext ' + g.card.which + '"><small>' + (g.card.which === 'chance' ? 'CHANCE' : 'COMMUNITY CHEST') + '</small>' + esc(g.card.text) + '</div>';
     return h + '</div>';
   }
 
@@ -514,12 +596,27 @@
     if (!c) return '';
     return '<div class="clock' + (c.left < 5000 ? ' hot' : '') + '"><i style="transform:scaleX(' + (c.left / c.len).toFixed(3) + ');transition:transform ' + (c.left / 1000).toFixed(1) + 's linear" data-live data-key="clk' + c.what + Math.round(c.len) + '"></i></div>';
   }
+  var secTimer = null;
+  function secsHtml() {
+    var c = G().clock;
+    if (!c) return '';
+    var end = Date.now() + c.left;
+    clearInterval(secTimer);
+    secTimer = setInterval(function () {
+      var el = $('#secs'); if (!el) { clearInterval(secTimer); return; }
+      var left = Math.max(0, end - Date.now());
+      el.textContent = Math.ceil(left / 1000);
+      el.classList.toggle('hot', left < 5000);
+    }, 200);
+    return '<div class="secs" id="secs" data-key="secs" data-live>' + Math.ceil(c.left / 1000) + '</div>';
+  }
 
   function tabs() {
-    var g = G(), inbox = g.trades.filter(function (t) { return t.to === me.id; }).length;
-    var h = '<div class="tabs">' + [['props', 'My stuff'], ['trade', 'Trade'], ['players', 'Players'], ['log', 'Log']].map(function (t) { return '<button data-a="tab" data-v="' + t[0] + '" class="' + (ui.tab === t[0] ? 'on' : '') + '">' + t[1] + (t[0] === 'trade' && inbox ? '<span class="n">' + inbox + '</span>' : '') + '</button>'; }).join('') + '</div>';
+    var g = G(), inbox = g.trades.filter(function (t) { return t.to === me.id; }).length, unread = unreadTotal();
+    var h = '<div class="tabs">' + [['props', 'Mine'], ['trade', 'Trade'], ['chat', 'Chat'], ['players', 'Players'], ['log', 'Log']].map(function (t) { var n = t[0] === 'trade' ? inbox : t[0] === 'chat' ? unread : 0; return '<button data-a="tab" data-v="' + t[0] + '" class="' + (ui.tab === t[0] ? 'on' : '') + '">' + t[1] + (n ? '<span class="n">' + n + '</span>' : '') + '</button>'; }).join('') + '</div>';
     if (ui.tab === 'props') h += propsTab();
     else if (ui.tab === 'trade') h += tradeTab();
+    else if (ui.tab === 'chat') h += chatTab();
     else if (ui.tab === 'players') h += playersTab();
     else h += '<div class="card logl" data-key="logTab">' + g.log.slice().reverse().map(function (l) { return '<div class="' + esc(l.kind) + '">' + esc(l.text) + '</div>'; }).join('') + '</div>';
     return h;
@@ -529,34 +626,16 @@
     var g = G();
     return Object.keys(g.props).map(Number).filter(function (i) { return g.props[i].owner === me.id; }).sort(function (a, b) { return a - b; });
   }
-  function houseHtml(h) { return h ? '<span class="houses">' + (h === 5 ? '<i class="h"></i>' : new Array(h + 1).join('<i></i>')) + '</span>' : ''; }
 
   function propsTab() {
-    var g = G(), mine = myProps();
-    var h = '<div class="card" data-key="propsTab"><h3><span>MY PROPERTIES</span><small>' + mine.length + ' · ' + (me.cards && (me.cards.chance || me.cards.chest) ? ((me.cards.chance ? 1 : 0) + (me.cards.chest ? 1 : 0)) + ' JAIL CARD' : 'TAP A NAME FOR ITS CARD') + '</small></h3>';
-    if (!mine.length) h += '<p class="note">Nothing yet. Land on something and buy it.</p>';
+    var g = G(), mine = myProps(), cards = me.cards ? (me.cards.chance ? 1 : 0) + (me.cards.chest ? 1 : 0) : 0;
+    var h = '<div class="card flat" data-key="propsTab"><h3 style="padding-top:10px"><span>MY PROPERTIES</span><small>' + (cards ? cards + ' JAIL CARD' + (cards > 1 ? 'S' : '') + ' · ' : '') + 'TAP ONE TO BUILD, SELL OR MORTGAGE</small></h3>';
+    if (!mine.length) h += '<p class="empty">Nothing yet. Land on something and buy it.</p>';
     mine.forEach(function (i) {
-      var sp = B.LAYOUT[i], pr = g.props[i], acts = me.props[i] || {};
-      var btn = function (a, label, why, cls) { return '<button data-a="' + a + '" data-i="' + i + '" class="' + (why ? 'dim' : cls || '') + '" data-why="' + esc(why || '') + '">' + label + '</button>'; };
-      h += '<div class="prop">' + swatch(i, pr.m ? 'sw m' : 'sw') + '<div class="in" data-a="deed" data-i="' + i + '"><b>' + esc(nameOfSpace(i)) + houseHtml(pr.h) + '</b><small>' + (pr.m ? 'Mortgaged · lift for ' + money(acts.liftCost) : sp.t === 'prop' ? 'Rent ' + money(rentNow(i)) + ' · house ' + money(sp.house) : 'Rent ' + money(rentNow(i))) + '</small></div><div class="bs">';
-      if (pr.m) h += btn('unmortgage', 'Lift', acts.lift, 'b');
-      else {
-        if (sp.t === 'prop' && acts.build !== 'n/a') h += btn('build', pr.h === 4 ? 'Hotel' : 'Build', acts.build, 'b');
-        if (pr.h) h += btn('sell', 'Sell', acts.sell);
-        h += btn('mortgage', 'Mortgage', acts.mortgage);
-      }
-      h += '</div></div>';
+      var pr = g.props[i];
+      h += '<div class="prop" data-a="sheet" data-i="' + i + '">' + swatch(i, pr.m ? 'sw m' : 'sw') + '<div class="in' + (pr.m ? ' dim' : '') + '"><b>' + esc(nameOfSpace(i)) + '</b>' + houseHtml(pr.h) + '</div><div class="rt">' + (pr.m ? 'MORT.' : money(rentNow(i))) + '<small>' + (pr.m ? 'LIFT ' + money((me.props[i] || {}).liftCost || 0) : 'RENT') + '</small></div><span class="chev">›</span></div>';
     });
-    h += '</div>';
-    return h;
-  }
-  function rentNow(i) {
-    var g = G(), sp = B.LAYOUT[i], pr = g.props[i];
-    var owned = B.members(sp.g).filter(function (k) { return g.props[k] && g.props[k].owner === pr.owner; }).length;
-    if (sp.t === 'rail') return 25 * Math.pow(2, owned - 1);
-    if (sp.t === 'util') return 7 * (owned === 2 ? 10 : 4);
-    if (pr.h) return sp.rent[pr.h];
-    return sp.rent[0] * (owned === B.members(sp.g).length ? 2 : 1);
+    return h + '</div>';
   }
 
   function playersTab() {
@@ -565,9 +644,35 @@
     S.players.forEach(function (p) {
       var pl = g.players[p.id], c = colorOf(p.id);
       var chips = Object.keys(g.props).map(Number).filter(function (i) { return g.props[i].owner === p.id; }).sort(function (a, b) { return a - b; }).map(function (i) { return swatch(i, g.props[i].m ? 'm' : ''); }).join('');
-      h += '<div style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(S.pieces[p.piece]) + '</span><div class="nm">' + esc(p.name) + (g.cur === p.id ? ' · UP' : '') + '<small>' + (pl.bankrupt ? 'Bankrupt' : esc(nameOfSpace(pl.pos)) + (pl.jail ? ' · in jail' : '') + (pl.cards ? ' · ' + pl.cards + ' jail card' + (pl.cards > 1 ? 's' : '') : '')) + '</small><div class="chips">' + chips + '</div></div><div class="cash">' + money(pl.cash) + '<small>NET ' + money(pl.net) + '</small></div></div>';
+      h += '<div class="pr" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(p.piece) + '</span><div class="nm">' + esc(p.name) + (p.bot ? ' <span class="tag" style="font:400 11px var(--display);letter-spacing:.14em;padding:3px 6px 1px;border-radius:999px;background:#2a8fd8">BOT</span>' : '') + (g.cur === p.id ? ' · UP' : '') + '<small>' + (pl.bankrupt ? 'Bankrupt' : esc(nameOfSpace(pl.pos)) + (pl.jail ? ' · in jail' : '') + (pl.cards ? ' · ' + pl.cards + ' jail card' + (pl.cards > 1 ? 's' : '') : '')) + '</small><div class="chips">' + chips + '</div></div><div class="cash">' + money(pl.cash) + '<small>NET ' + money(pl.net) + '</small></div></div>';
     });
     return h + '</div>';
+  }
+
+  /* -------- the property sheet: the deed and what you can do with it */
+  function renderSheet() {
+    var i = ui.sheet.deed, g = G(), pr = g.props[i], el = $('#sheet');
+    if (!el) { el = document.createElement('div'); el.id = 'sheet'; el.className = 'sheetBack'; el.innerHTML = '<div class="sheet"><div class="grip"></div><div id="sheetIn"></div></div>'; document.body.appendChild(el); el.addEventListener('click', function (e) { if (e.target === el) closeSheet(); }); }
+    var h = deed(i);
+    if (pr && pr.owner === me.id && !me.bankrupt) {
+      var acts = me.props[i] || {}, sp = B.LAYOUT[i], why = [];
+      var b = function (a, label, amount, reason, cls) { if (reason) why.push(reason); return '<button class="btn ' + (cls || '') + '" data-a="' + a + '" data-i="' + i + '"' + (reason ? ' disabled' : '') + '><span>' + label + '</span><b>' + amount + '</b></button>'; };
+      h += '<div class="acts">';
+      if (pr.m) h += b('unmortgage', 'Lift the mortgage', '−' + money(acts.liftCost), acts.lift, 'gold');
+      else {
+        if (sp.t === 'prop') h += b('build', pr.h === 4 ? 'Build a hotel' : 'Build a house', '−' + money(sp.house), acts.build, 'gold');
+        if (pr.h) h += b('sell', pr.h === 5 ? 'Sell the hotel' : 'Sell a house', '+' + money(sp.house / 2), acts.sell);
+        h += b('mortgage', 'Mortgage it', '+' + money(sp.price / 2), acts.mortgage);
+      }
+      h += '<div class="why">' + esc(why.filter(function (w) { return w && w !== 'n/a' && w !== 'nothing to sell' && w !== 'not yours'; }).join(' ')) + '</div></div>';
+    }
+    h += '<button class="btn ghost sm" data-a="closeSheet">Close</button>';
+    $('#sheetIn').innerHTML = h;
+  }
+  function closeSheet(now) {
+    var el = $('#sheet'); ui.sheet = null;
+    if (!el) return;
+    if (now) el.remove(); else { el.classList.add('out'); setTimeout(function () { el.remove(); }, 200); }
   }
 
   /* -------- trading */
@@ -575,49 +680,80 @@
     var g = G(), h = '';
     var inbox = g.trades.filter(function (t) { return t.to === me.id; }), sent = g.trades.filter(function (t) { return t.from === me.id; });
     inbox.forEach(function (t) {
-      h += '<div class="card mine" data-key="in' + t.id + '"><h3><span>' + esc(pname(t.from)) + ' OFFERS</span><small>TRADE</small></h3>' + sideHtml(t.give, 'You get') + sideHtml(t.get, 'You give') + (t.note ? '<p class="note">“' + esc(t.note) + '”</p>' : '') +
-        '<div class="row3"><button class="btn gold sm" data-a="accept" data-id="' + t.id + '">Accept</button><button class="btn blue sm" data-a="counter" data-id="' + t.id + '">Counter</button><button class="btn ghost sm" data-a="declineTrade" data-id="' + t.id + '">No thanks</button></div></div>';
+      h += '<div class="card mine" data-key="in' + t.id + '"><h3><span>' + esc(pname(t.from)) + ' OFFERS A TRADE</span></h3><div class="sides">' + sideHtml(t.give, 'YOU GET') + sideHtml(t.get, 'YOU GIVE') + '</div>' + (t.note ? '<p class="note" style="margin-top:0">“' + esc(t.note) + '”</p>' : '') +
+        '<button class="btn gold" data-a="accept" data-id="' + t.id + '">Accept</button><div class="row2"><button class="btn blue sm" data-a="counter" data-id="' + t.id + '">Counter</button><button class="btn ghost sm" data-a="declineTrade" data-id="' + t.id + '">No thanks</button></div></div>';
     });
     sent.forEach(function (t) {
-      h += '<div class="card" data-key="out' + t.id + '"><h3><span>WAITING ON ' + esc(pname(t.to)) + '</span><small>YOUR OFFER</small></h3>' + sideHtml(t.give, 'You give') + sideHtml(t.get, 'You get') + '<button class="btn ghost sm" data-a="cancelTrade" data-id="' + t.id + '">Take it back</button></div>';
+      h += '<div class="card" data-key="out' + t.id + '"><h3><span>WAITING ON ' + esc(pname(t.to)) + '</span><small>YOUR OFFER</small></h3><div class="sides">' + sideHtml(t.give, 'YOU GIVE') + sideHtml(t.get, 'YOU GET') + '</div><button class="btn ghost sm" data-a="cancelTrade" data-id="' + t.id + '">Take it back</button></div>';
     });
     var others = S.players.filter(function (p) { return p.id !== me.id && !g.players[p.id].bankrupt; });
     h += '<div class="card" data-key="newTrade"><h3><span>MAKE AN OFFER</span><small>ANY TIME</small></h3>';
-    if (me.bankrupt) return h + '<p class="note">You’re out of the game.</p></div>';
-    h += '<div class="who">' + others.map(function (p) { return '<span class="' + (ui.trade && ui.trade.to === p.id ? 'me' : '') + '" data-a="tradeWith" data-id="' + p.id + '"><i style="background:' + colorOf(p.id)[0] + '">' + esc(S.pieces[p.piece]) + '</i>' + esc(p.name) + '</span>'; }).join('') + '</div>';
+    if (me.bankrupt) return h + '<p class="empty">You’re out of the game.</p></div>';
+    h += '<div class="who">' + others.map(function (p) { return '<span class="' + (ui.trade && ui.trade.to === p.id ? 'me' : '') + '" data-a="tradeWith" data-id="' + p.id + '"><i style="background:' + colorOf(p.id)[0] + '">' + esc(p.piece) + '</i>' + esc(p.name) + '</span>'; }).join('') + '</div>';
     if (ui.trade && ui.trade.to) {
       var tr = ui.trade, them = g.players[tr.to];
       if (!them || them.bankrupt) { ui.trade = null; return h + '</div>'; }
       h += '<div class="label">YOU GIVE</div>' + pickList(me.id, tr.give) + cashRow('give', me.cash, tr.give.cash) + cardRow(me.id, 'give', tr.give);
       h += '<div class="label">YOU GET FROM ' + esc(pname(tr.to)) + '</div>' + pickList(tr.to, tr.get) + cashRow('get', them.cash, tr.get.cash) + cardRow(tr.to, 'get', tr.get);
+      h += '<div class="offerSum">' + esc(summary(tr)) + '</div>';
+      h += '<button class="btn gold" data-a="sendTrade">Send the offer</button><button class="btn ghost sm" data-a="clearTrade">Start over</button>';
       h += '<p class="note">Buildings have to be sold before a property can be traded. Whoever takes on a mortgaged property pays 10% interest on the spot.</p>';
-      h += '<button class="btn gold" data-a="sendTrade">Send the offer</button><button class="btn ghost sm" data-a="clearTrade">Clear</button>';
-    } else h += '<p class="note">Pick who you want to trade with.</p>';
+    } else h += '<p class="empty">Pick who you want to trade with.</p>';
     return h + '</div>';
   }
+  function summary(tr) {
+    var part = function (s) { var b = s.props.map(function (i) { return nameOfSpace(i); }); if (s.cash) b.push(money(s.cash)); if (s.card) b.push('a jail card'); return b.length ? b.join(', ') : 'nothing'; };
+    return 'You give ' + part(tr.give) + ' and get ' + part(tr.get) + '.';
+  }
   function sideHtml(side, label) {
-    var bits = side.props.map(function (i) { return swatch(i, 'sw') + ' ' + esc(nameOfSpace(i)); });
-    if (side.cash) bits.push(money(side.cash));
-    if (side.chance || side.chest) bits.push('a Get Out of Jail Free card');
-    return '<div class="label">' + label + '</div><div class="who">' + (bits.length ? bits.map(function (b) { return '<span>' + b + '</span>'; }).join('') : '<em>nothing</em>') + '</div>';
+    var h = '<div class="side"><h4>' + label + '</h4>';
+    side.props.forEach(function (i) { h += '<div>' + swatch(i) + esc(nameOfSpace(i)) + '</div>'; });
+    if (side.cash) h += '<div>' + money(side.cash) + '</div>';
+    if (side.chance || side.chest) h += '<div>Get Out of Jail Free</div>';
+    if (!side.props.length && !side.cash && !side.chance && !side.chest) h += '<em>nothing</em>';
+    return h + '</div>';
   }
   function pickList(pid, side) {
     var g = G(), list = Object.keys(g.props).map(Number).filter(function (i) { return g.props[i].owner === pid; }).sort(function (a, b) { return a - b; });
-    if (!list.length) return '<p class="note" style="margin-top:4px">No properties.</p>';
+    if (!list.length) return '<p class="empty" style="padding:8px">No properties.</p>';
     return list.map(function (i) {
       var pr = g.props[i], on = side.props.indexOf(i) >= 0;
-      return '<div class="prop pick ' + (on ? 'on' : '') + '" data-a="pick" data-side="' + (pid === me.id ? 'give' : 'get') + '" data-i="' + i + '">' + swatch(i, pr.m ? 'sw m' : 'sw') + '<div class="in"><b>' + esc(nameOfSpace(i)) + houseHtml(pr.h) + '</b><small>' + (pr.m ? 'mortgaged' : money(B.LAYOUT[i].price)) + (pr.h ? ' · sell buildings first' : '') + '</small></div><div class="bs"><button class="' + (on ? 'b' : '') + '">' + (on ? '✓' : '+') + '</button></div></div>';
+      return '<div class="prop pick ' + (on ? 'on' : '') + '" data-a="pick" data-side="' + (pid === me.id ? 'give' : 'get') + '" data-i="' + i + '">' + swatch(i, pr.m ? 'sw m' : 'sw') + '<div class="in"><b>' + esc(nameOfSpace(i)) + '</b>' + houseHtml(pr.h) + '</div><div class="rt">' + (pr.m ? 'MORT.' : money(B.LAYOUT[i].price)) + (pr.h ? '<small>SELL FIRST</small>' : '') + '</div><span class="ck">' + (on ? '✓' : '+') + '</span></div>';
     }).join('');
   }
   function cashRow(side, max, val) {
-    return '<div class="cashIn"><span>$</span><input type="number" inputmode="numeric" data-key="cash' + side + '" data-cash="' + side + '" placeholder="0" value="' + (val || '') + '" min="0" max="' + max + '"><span>of ' + money(max) + '</span></div>';
+    return '<div class="cashRow"><div class="inw"><span>$</span><input type="number" inputmode="numeric" data-key="cash' + side + '" data-cash="' + side + '" placeholder="0" value="' + (val || '') + '" min="0" max="' + max + '"></div><button data-a="cashAdd" data-side="' + side + '" data-v="50">+50</button><button data-a="cashAdd" data-side="' + side + '" data-v="100">+100</button><small>of ' + money(max) + '</small></div>';
   }
   function cardRow(pid, side, st) {
     var g = G(), pl = g.players[pid], have = pid === me.id ? ((me.cards.chance ? 1 : 0) + (me.cards.chest ? 1 : 0)) : pl.cards;
     if (!have) return '';
-    return '<div class="prop pick ' + (st.card ? 'on' : '') + '" data-a="pickCard" data-side="' + side + '"><div class="in"><b>Get Out of Jail Free card</b><small>' + have + ' available</small></div><div class="bs"><button class="' + (st.card ? 'b' : '') + '">' + (st.card ? '✓' : '+') + '</button></div></div>';
+    return '<div class="prop pick ' + (st.card ? 'on' : '') + '" data-a="pickCard" data-side="' + side + '"><div class="in"><b>Get Out of Jail Free card</b></div><div class="rt"><small>' + have + ' HELD</small></div><span class="ck">' + (st.card ? '✓' : '+') + '</span></div>';
   }
   function newTrade(to) { return { to: to, give: { props: [], cash: 0, card: false }, get: { props: [], cash: 0, card: false } }; }
+
+  /* -------- chat */
+  function chatTab() {
+    var g = G(), chats = me.chats || {};
+    var others = S.players.filter(function (p) { return p.id !== me.id && !p.bot; });
+    if (ui.chatWith && !player(ui.chatWith)) ui.chatWith = null;
+    if (ui.chatWith) {
+      var peer = ui.chatWith, list = chats[peer] || [], c = colorOf(peer);
+      markSeen(peer);
+      var h = '<div class="card" data-key="chatWith"><div class="chatHead"><button data-a="chatBack">‹</button><span class="tk" style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;background:linear-gradient(' + c[0] + ',' + c[1] + ')">' + esc(piece(peer)) + '</span><b>' + esc(pname(peer)) + '</b><small style="color:#9ccbb1;font-weight:700;font-size:12px">PRIVATE</small></div>';
+      h += '<div class="msgs" id="msgs" data-key="msgs">' + (list.length ? list.map(function (m) { return '<div class="msg ' + (m.from === me.id ? 'me' : '') + '">' + esc(m.text) + '</div>'; }).join('') : '<p class="empty">Nothing yet. Only the two of you can see this.</p>') + '</div>';
+      h += '<div class="chatIn"><input id="chatIn" data-key="chatIn" maxlength="240" placeholder="Message ' + esc(pname(peer)) + '…" enterkeyhint="send"><button class="btn gold" data-a="chatSend">Send</button></div></div>';
+      setTimeout(function () { var m = $('#msgs'); if (m) m.scrollTop = m.scrollHeight; }, 30);
+      return h;
+    }
+    var h2 = '<div class="card chatList" data-key="chatList"><h3><span>CHAT</span><small>PRIVATE, ONE TO ONE</small></h3>';
+    if (!others.length) h2 += '<p class="empty">Nobody else to talk to yet.</p>';
+    others.forEach(function (p) {
+      var list = chats[p.id] || [], last = list[list.length - 1], n = unreadFrom(p.id), c = colorOf(p.id);
+      h2 += '<div class="row" data-a="chatWith" data-id="' + p.id + '" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(p.piece) + '</span><div class="nm">' + esc(p.name) + '<small>' + (last ? esc((last.from === me.id ? 'You: ' : '') + last.text) : 'Say something') + '</small></div>' + (n ? '<span class="n">' + n + '</span>' : '<span class="chev" style="color:#9ccbb1">›</span>') + '</div>';
+    });
+    void g;
+    return h2 + '</div>';
+  }
 
   /* -------- game over */
   function endCard() {
@@ -640,19 +776,23 @@
     lastTurn = myTurnNow;
     if (me.offer != null && lastOffer !== me.offer) { buzzPhone(50); }
     lastOffer = me.offer;
-    if (has.roll && has.roll.pid === me.id) sfx.dice();
+    if (has.roll && has.roll.pid === me.id) { sfx.dice(); if (has.roll.dbl && !has.jail) setTimeout(function () { sfx.doubles(); pop('good', 'DOUBLES!', 'Roll again', 1000); }, 500); }
+    if (has.move && has.move.pid === me.id && has.move.passGo) setTimeout(function () { sfx.chaching(); pop('good', '+$200', 'Passed GO', 1000); }, has.move.teleport ? 400 : 170 * Math.max(0, (40 - has.move.from) % 40));
+    if (has.go && has.go.pid === me.id) { sfx.chaching(); pop('good', '+$200', 'Landed on GO'); }
     if (has.rent && has.rent.to === me.id) { sfx.cash(); pop('good', '+' + money(has.rent.amount), pname(has.rent.pid) + ' pays you rent'); }
-    if (has.rent && has.rent.pid === me.id) { sfx.pay(); pop('bad', '−' + money(has.rent.amount), 'rent to ' + pname(has.rent.to)); buzzPhone(80); }
+    if (has.rent && has.rent.pid === me.id) { if (has.rent.amount >= 300) sfx.sting(); else sfx.pay(); pop('bad', '−' + money(has.rent.amount), 'rent to ' + pname(has.rent.to)); buzzPhone(has.rent.amount >= 300 ? [100, 60, 200] : 80); }
     if (has.tax && has.tax.pid === me.id) { sfx.pay(); pop('bad', '−' + money(has.tax.amount), 'tax'); }
     if (has.collect && has.collect.pid === me.id) { sfx.cash(); pop('good', '+' + money(has.collect.amount), 'from the card'); }
-    if (has.jail && has.jail.pid === me.id) { sfx.jail(); pop('bad', 'JAIL', 'Go directly. Do not pass GO.', 1800); buzzPhone([100, 60, 100]); }
+    if (has.jail && has.jail.pid === me.id) { sfx.clang(); pop('bad', 'JAIL', 'Go directly. Do not pass GO.', 1800); buzzPhone([100, 60, 100]); }
     if (has.free && has.free.pid === me.id) sfx.free();
     if (has.buy && has.buy.pid === me.id) { sfx.buy(); pop('good', 'YOURS', nameOfSpace(has.buy.space)); }
     if (has.sold && has.sold.pid === me.id) { sfx.buy(); pop('good', 'SOLD TO YOU', nameOfSpace(has.sold.space) + ' for ' + money(has.sold.amount)); }
+    if (has.monopoly && has.monopoly.pid === me.id) { var gr = B.GROUPS[has.monopoly.group]; var el = $('#pop'); el.style.setProperty('--mc', gr.color); el.style.setProperty('--mi', gr.ink); sfx.fanfare(); pop('mono', 'MONOPOLY!', 'You own the whole ' + gr.name.toLowerCase() + ' set. Build!', 2400); buzzPhone([60, 40, 60, 40, 160]); }
+    if (has.build && has.build.pid === me.id) sfx.hammer();
     if (has.card && has.card.pid === me.id) sfx.card();
     if (has.debt && has.debt.pid === me.id) { sfx.horn(); buzzPhone([120, 60, 120]); }
     if (has.paid && has.paid.pid === me.id) sfx.pay();
-    if (has.bankrupt && has.bankrupt.pid === me.id) { sfx.broke(); pop('bad', 'BANKRUPT', 'You’re out', 2200); }
+    if (has.bankrupt && has.bankrupt.pid === me.id) { sfx.crash(); pop('bad', 'BANKRUPT', 'You’re out', 2200); }
     if (has.bankrupt && has.bankrupt.to === me.id) { sfx.cash(); pop('good', 'EVERYTHING', pname(has.bankrupt.pid) + ' went bankrupt to you', 2000); }
     if (has.tradeOffer && has.tradeOffer.to === me.id) { sfx.trade(); buzzPhone([60, 40, 60]); if (ui.tab !== 'trade') toast(pname(has.tradeOffer.from) + ' sent you a trade. It’s in the Trade tab.'); }
     if (has.trade && (has.trade.from === me.id || has.trade.to === me.id)) { sfx.trade(); pop('good', 'TRADED', 'with ' + pname(has.trade.from === me.id ? has.trade.to : has.trade.from)); if (ui.trade) ui.trade = null; }
@@ -662,20 +802,6 @@
     if (has.auto && has.auto.pid === me.id) toast('Your phone was away, so the game played that one for you.');
   }
 
-  /* -------- a property's card, full screen */
-  function renderModal() {
-    var m = ui.modal, el = $('#modal');
-    if (!el) { el = document.createElement('div'); el.id = 'modal'; el.className = 'modal'; el.innerHTML = '<div class="in" id="modalIn"></div>'; document.body.appendChild(el); }
-    var h = '';
-    if (m.deed != null) h = '<div class="bar"><span>PROPERTY</span><span></span></div>' + deed(m.deed) + '<button class="btn ghost" data-a="closeModal">Close</button>';
-    $('#modalIn').innerHTML = h;
-  }
-  function closeModal(now) {
-    var el = $('#modal'); ui.modal = null;
-    if (!el) return;
-    if (now) el.remove(); else { el.classList.add('out'); setTimeout(function () { el.remove(); }, 200); }
-  }
-
   /* ------------------------------------------------------------ taps */
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-a]'); if (!b || !S) return;
@@ -683,12 +809,13 @@
     if (b.tagName === 'A') e.preventDefault();
     sfx.unlock();
     switch (a) {
-      case 'piece': send({ t: 'piece', n: Number(b.getAttribute('data-n')) }); break;
+      case 'piece': send({ t: 'piece', piece: b.getAttribute('data-p') }); F.store.set('mon.piece', b.getAttribute('data-p')); break;
+      case 'pieceCustom': { var pc = ($('#emojiIn').value || '').trim(); if (!pc) { toast('Type an emoji first.'); break; } ui.piece = pc; send({ t: 'piece', piece: pc }); F.store.set('mon.piece', pc); break; }
       case 'start': send({ t: 'h', a: 'start' }); break;
       case 'lobby': send({ t: 'h', a: 'lobby' }); break;
-      case 'leave': if (confirm('Leave this room?')) { send({ t: 'leave' }); backToJoin(); } break;
-      case 'tab': ui.tab = v; render([]); break;
-      case 'roll': b.disabled = true; send({ t: 'roll' }); break;
+      case 'leave': F.confirm('LEAVE THIS ROOM?', S.game ? 'Leaving mid-game counts as going bankrupt.' : 'You can join again any time.', 'Leave', !!S.game).then(function (ok) { if (ok) { send({ t: 'leave' }); backToJoin(); } }); break;
+      case 'tab': ui.tab = v; if (v !== 'chat') ui.chatWith = null; render([]); break;
+      case 'roll': b.disabled = true; b.classList.add('spin'); sfx.shake(); buzzPhone(30); send({ t: 'roll' }); break;
       case 'payJail': send({ t: 'payJail' }); break;
       case 'useCard': send({ t: 'useCard' }); break;
       case 'buy': send({ t: 'buy' }); break;
@@ -697,19 +824,15 @@
       case 'bidCustom': { var inp = $('#bidIn'); var amt = Math.round(Number(inp && inp.value)); if (!amt) { toast('Type an amount.'); break; } send({ t: 'bid', amount: amt }); break; }
       case 'pass': send({ t: 'pass' }); break;
       case 'payDebt': send({ t: 'payDebt' }); break;
-      case 'bankrupt': if (confirm('Declare bankruptcy? You’re out of the game.')) send({ t: 'bankrupt' }); break;
-      case 'build': case 'sell': case 'mortgage': case 'unmortgage': {
-        var why = b.getAttribute('data-why');
-        if (why) { toast(why); buzzPhone(40); break; }
-        if (a === 'mortgage' && !confirm('Mortgage ' + nameOfSpace(i) + ' for ' + money(B.LAYOUT[i].price / 2) + '? Lifting it later costs 10% more.')) break;
-        send({ t: a, i: i });
-        break;
-      }
-      case 'deed': ui.modal = { deed: i }; renderModal(); break;
-      case 'closeModal': closeModal(); break;
+      case 'bankrupt': F.confirm('DECLARE BANKRUPTCY?', 'You’re out of the game. Everything you have goes to whoever you owe.', 'I’m out', true).then(function (ok) { if (ok) send({ t: 'bankrupt' }); }); break;
+      case 'build': case 'sell': case 'unmortgage': send({ t: a, i: i }); break;
+      case 'mortgage': F.confirm('MORTGAGE ' + nameOfSpace(i).toUpperCase() + '?', 'You get ' + money(B.LAYOUT[i].price / 2) + ' now. It collects no rent while mortgaged, and lifting it later costs ' + money(Math.round(B.LAYOUT[i].price / 2 * 1.1)) + '.', 'Mortgage it').then(function (ok) { if (ok) send({ t: 'mortgage', i: i }); }); break;
+      case 'sheet': ui.sheet = { deed: i }; renderSheet(); break;
+      case 'closeSheet': closeSheet(); break;
       case 'tradeWith': { var id = b.getAttribute('data-id'); ui.trade = ui.trade && ui.trade.to === id ? null : newTrade(id); render([]); break; }
-      case 'pick': { var side = ui.trade[b.getAttribute('data-side')]; var k = side.props.indexOf(i); if (k >= 0) side.props.splice(k, 1); else side.props.push(i); render([]); break; }
-      case 'pickCard': { var sd = ui.trade[b.getAttribute('data-side')]; sd.card = !sd.card; render([]); break; }
+      case 'pick': { readCash(); var side = ui.trade[b.getAttribute('data-side')]; var k = side.props.indexOf(i); if (k >= 0) side.props.splice(k, 1); else side.props.push(i); render([]); break; }
+      case 'pickCard': { readCash(); var sd = ui.trade[b.getAttribute('data-side')]; sd.card = !sd.card; render([]); break; }
+      case 'cashAdd': { readCash(); var s2 = b.getAttribute('data-side'); var mx = s2 === 'give' ? me.cash : G().players[ui.trade.to].cash; ui.trade[s2].cash = Math.min(mx, (ui.trade[s2].cash || 0) + Number(v)); render([]); break; }
       case 'clearTrade': ui.trade = newTrade(ui.trade.to); render([]); break;
       case 'sendTrade': {
         var t = ui.trade; readCash();
@@ -729,13 +852,23 @@
         render([]);
         break;
       }
+      case 'chatWith': ui.chatWith = b.getAttribute('data-id'); render([]); setTimeout(function () { var ci = $('#chatIn'); if (ci) ci.focus(); }, 80); break;
+      case 'chatBack': ui.chatWith = null; render([]); break;
+      case 'chatSend': sendChat(); break;
     }
   });
+  function sendChat() {
+    var inp = $('#chatIn'); if (!inp || !ui.chatWith) return;
+    var text = inp.value.trim(); if (!text) return;
+    send({ t: 'chat', to: ui.chatWith, text: text });
+    inp.value = ''; inp.focus();
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target && e.target.id === 'chatIn') { e.preventDefault(); sendChat(); } });
   function readCash() {
     if (!ui.trade) return;
     document.querySelectorAll('input[data-cash]').forEach(function (inp) { ui.trade[inp.getAttribute('data-cash')].cash = Math.max(0, Math.round(Number(inp.value) || 0)); });
   }
-  document.addEventListener('input', function (e) { if (e.target.hasAttribute && e.target.hasAttribute('data-cash')) readCash(); });
+  document.addEventListener('input', function (e) { if (e.target.hasAttribute && e.target.hasAttribute('data-cash')) readCash(); if (e.target.id === 'emojiIn') ui.piece = e.target.value; });
 })();
 </script>
 </body>
