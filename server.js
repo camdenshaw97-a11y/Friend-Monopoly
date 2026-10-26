@@ -541,6 +541,8 @@ function nextTurn(room) {
   if (g.phase === 'gameOver') return;
   const live = alive(room, g);
   if (live.length <= 1) return endGame(room, 'last');
+  // Properties of someone who left mid-move are auctioned before the next roll.
+  if (g.auctionQueue.length && !g.auction) return startAuction(room, g.auctionQueue.shift(), 'bank');
   const me = P(g, g.cur);
   if (g.roll && g.roll.dbl && !me.jail && !me.bankrupt && live.includes(g.cur)) {
     log(room, pname(room, g.cur) + ' rolled doubles and goes again.', 'turn');
@@ -1171,7 +1173,10 @@ function declareBankruptcy(room, p) {
   goBankrupt(room, p.id, d);
 }
 
-function goBankrupt(room, pid, d) {
+// opts.left: they walked away rather than going broke. opts.quiet: it isn't their move, so
+// whatever is happening on the board carries on undisturbed.
+function goBankrupt(room, pid, d, opts) {
+  opts = opts || {};
   const g = room.game, me = P(g, pid), name = pname(room, pid);
   const creditor = d.to && d.to !== 'bank' && d.to !== 'each' ? d.to : null;
   // Buildings go back to the bank for half, and that cash goes where the rest does.
@@ -1192,23 +1197,28 @@ function goBankrupt(room, pid, d) {
     for (const i of mine) { g.props[i].owner = creditor; if (g.props[i].m) { const due = Math.round(g.spaces[i].price / 2 * MORTGAGE_INTEREST); if (c.cash >= due) c.cash -= due; } }
     if (me.cards.chance) { c.cards.chance = true; me.cards.chance = false; }
     if (me.cards.chest) { c.cards.chest = true; me.cards.chest = false; }
-    log(room, name + ' goes bankrupt. Everything goes to ' + pname(room, creditor) + ': ' + money(cash) + (mine.length ? ' and ' + mine.length + ' properties' : '') + '.', 'bankrupt');
+    log(room, name + (opts.left ? ' leaves the game owing ' + pname(room, creditor) + '. Everything goes to them' : ' goes bankrupt. Everything goes to ' + pname(room, creditor)) + ': ' + money(cash) + (mine.length ? ' and ' + mine.length + ' properties' : '') + '.', 'bankrupt');
     noteSets(room, creditor, beforeC);
   } else {
     for (const i of mine) { delete g.props[i]; g.auctionQueue.push(i); }
     const deck = Cards.deckById(g.deck).cards;
     for (const which of ['chance', 'chest']) if (me.cards[which]) { me.cards[which] = false; const idx = deck[which].findIndex(c => c.k === 'jailfree'); if (idx >= 0) g.decks[which].push(idx); }
-    log(room, name + ' goes bankrupt to the bank.' + (mine.length ? ' Their ' + mine.length + ' properties go up for auction.' : ''), 'bankrupt');
+    log(room, name + (opts.left ? ' leaves the game.' : ' goes bankrupt to the bank.') + (mine.length ? ' Their ' + mine.length + ' properties go up for auction.' : ''), 'bankrupt');
   }
-  me.bankrupt = true; me.out = ++g.outCount; me.jail = false;
+  me.bankrupt = true; me.out = ++g.outCount; me.jail = false; if (opts.left) me.left = true;
   if (g.card && g.card.pid === pid) g.card = null;
   if (g.offer && g.offer.pid === pid) g.offer = null;
   g.debts = g.debts.filter(x => x.pid !== pid);
   g.trades = g.trades.filter(t => t.from !== pid && t.to !== pid);
   if (g.auction) { g.auction.passed = g.auction.passed.filter(id => id !== pid); if (g.auction.bidder === pid) { g.auction.bidder = null; g.auction.bid = 0; } }
-  fx(room, 'bankrupt', { pid, to: creditor });
+  fx(room, opts.left ? 'leftGame' : 'bankrupt', { pid, to: creditor, props: mine.length });
+  if (alive(room, g).length <= 1) { stopClock(room); return endGame(room, 'last'); }
+  if (opts.quiet) {
+    // Their properties wait for the end of the current move to go up for auction (see nextTurn).
+    if (g.auction && g.phase === 'auction') checkAuction(room);
+    return;
+  }
   stopClock(room);
-  if (alive(room, g).length <= 1) return endGame(room, 'last');
   settle(room);
 }
 
@@ -1236,7 +1246,7 @@ function ranking(room) {
   const g = room.game, ids = seats(room);
   const live = ids.filter(id => !P(g, id).bankrupt).map(id => ({ id, net: netWorth(g, id), cash: P(g, id).cash }))
     .sort((a, b) => b.net - a.net || b.cash - a.cash || pname(room, a.id).localeCompare(pname(room, b.id)));
-  const gone = ids.filter(id => P(g, id).bankrupt).sort((a, b) => P(g, b).out - P(g, a).out).map(id => ({ id, net: 0, cash: 0, out: P(g, id).out }));
+  const gone = ids.filter(id => P(g, id).bankrupt).sort((a, b) => P(g, b).out - P(g, a).out).map(id => ({ id, net: 0, cash: 0, out: P(g, id).out, left: !!P(g, id).left }));
   return live.concat(gone).map((r, k) => Object.assign({ place: k + 1, name: pname(room, r.id) }, r));
 }
 
@@ -1544,7 +1554,7 @@ function publicState(room) {
     const players = {};
     for (const id of Object.keys(g.players)) {
       const p = g.players[id];
-      players[id] = { cash: p.cash, pos: p.pos, jail: p.jail, jailTurns: p.jailTurns, cards: (p.cards.chance ? 1 : 0) + (p.cards.chest ? 1 : 0), bankrupt: p.bankrupt, out: p.out, net: netWorth(g, id) };
+      players[id] = { cash: p.cash, pos: p.pos, jail: p.jail, jailTurns: p.jailTurns, cards: (p.cards.chance ? 1 : 0) + (p.cards.chest ? 1 : 0), bankrupt: p.bankrupt, left: !!p.left, out: p.out, net: netWorth(g, id) };
     }
     s.game = {
       theme: g.theme, deck: g.deck, mode: g.mode, order: g.order, cur: g.cur, roll: g.roll, rolloff: g.rolloff, turnCount: g.turnCount,
@@ -1621,9 +1631,11 @@ function dropPlayer(room, p, kicked) {
   const g = room.game;
   const i = room.order.indexOf(p.id);
   if (g && g.players[p.id] && !g.players[p.id].bankrupt && g.phase !== 'gameOver') {
-    // Leaving a running game is the same as going bankrupt to the bank.
-    log(room, p.name + ' leaves the game.', 'bankrupt');
-    goBankrupt(room, p.id, { pid: p.id, to: 'bank', amount: 0, reason: 'left' });
+    // Leaving a running game is the same as going bankrupt: to whoever they owe right now, else
+    // to the bank. If it's their move the game moves on; if not, the move in progress carries on.
+    const owed = g.debts.find(x => x.pid === p.id);
+    const involved = g.cur === p.id || actor(g) === p.id || (g.landing && g.landing.pid === p.id) || (g.card && g.card.pid === p.id);
+    goBankrupt(room, p.id, owed || { pid: p.id, to: 'bank', amount: 0, reason: 'left' }, { left: true, quiet: !involved });
   } else if (!g && i >= 0) room.order.splice(i, 1);
   if (!g || !g.players[p.id]) room.players.delete(p.id);
   else if (!p.bot) p.connected = false;

@@ -110,7 +110,7 @@
   .sp .pr { display: block; font: 700 12px var(--letter); color: var(--ink2); margin-top: 3px; font-style: normal; }
   .sp .ic { font: 400 30px/1 var(--letter); font-style: normal; color: var(--ink); margin-bottom: 2px; }
   .sp .ic.chance { color: #e07b10; font-weight: 900; font-size: 42px; } .sp .ic.chest { color: #2a8fd8; } .sp .ic.rail { color: var(--ink); font-size: 22px; letter-spacing: -2px; } .sp .ic.util { color: #8a8f99; } .sp .ic.tax { color: var(--ink2); } .sp .ic.go { color: var(--red); font-size: 46px; font-weight: 900; } .sp .ic.jail { color: #e07b10; } .sp .ic.parking { color: var(--red); font-weight: 900; font-size: 44px; } .sp .ic.gotojail { color: var(--ink); }
-  .sp.top .nm.long, .sp.bottom .nm.long { font-size: 10px; letter-spacing: -.01em; overflow-wrap: anywhere; }
+  .sp.top .nm.long, .sp.bottom .nm.long { font-size: 9px; letter-spacing: -.02em; }
   .sp.corner .nm { font-size: 18px; }
   .sp.chest .nm { font-size: 10.5px; letter-spacing: 0; }
   .sp.go { background: linear-gradient(135deg, var(--go1), var(--go2)); }
@@ -223,6 +223,7 @@
   .plate.owe::before { content: "OWES"; background: var(--red); color: #fff; }
   .plate.gone { opacity: .4; filter: grayscale(.8); }
   .plate.gone .cash::after { content: " BANKRUPT"; font: 400 16px var(--display); letter-spacing: .1em; color: #ff8a80; }
+  .plate.gone.left .cash::after { content: " LEFT"; }
   .plate.off .nm { opacity: .55; }
   .plate.off .nm::after { content: " · away"; font: 700 14px var(--text); letter-spacing: .06em; color: #ff8a80; }
   .plate.hit { animation: plateHit .8s ease-out; }
@@ -843,7 +844,7 @@
     pl.className = n <= 4 ? 'tall' : '';
     var h = s.players.map(function (p, i) {
       var me = g.players[p.id] || {}, c = colorOf(i);
-      var cls = (g.cur === p.id && !me.bankrupt && s.phase !== 'gameOver' && s.phase !== 'rolloff' ? ' up' : '') + (me.bankrupt ? ' gone' : '') + (p.on ? '' : ' off') + (s.phase === 'debt' && g.debts[0] && g.debts[0].pid === p.id ? ' owe' : '');
+      var cls = (g.cur === p.id && !me.bankrupt && s.phase !== 'gameOver' && s.phase !== 'rolloff' ? ' up' : '') + (me.bankrupt ? ' gone' + (me.left ? ' left' : '') : '') + (p.on || me.bankrupt ? '' : ' off') + (s.phase === 'debt' && g.debts[0] && g.debts[0].pid === p.id ? ' owe' : '');
       var props = Object.keys(g.props).map(Number).filter(function (k) { return g.props[k].owner === p.id; }).sort(function (a, b) { return a - b; }).map(function (k) {
         var sp = B.LAYOUT[k], pr = g.props[k], col = sp.g === 'rail' ? '' : sp.g === 'util' ? '' : B.GROUPS[sp.g].color;
         return '<i class="' + sp.t + (pr.m ? ' m' : '') + '" style="' + (col ? 'background:' + col : '') + '" title="' + esc(s.names[k]) + '">' + (pr.h === 5 ? '<small>H</small>' : pr.h ? '<small>' + pr.h + '</small>' : '') + '</i>';
@@ -917,6 +918,7 @@
     if (has.bid) sfx.bid();
     if (has.unsold) sfx.gavel();
     if (has.bankrupt) { sfx.crash(); shakeStage(); banner('BANKRUPT', 2600, 'red', nameOf(has.bankrupt.pid)); }
+    if (has.leftGame) { sfx.pay(); banner(nameOf(has.leftGame.pid) + ' LEFT', 2400, 'red', has.leftGame.to ? 'EVERYTHING GOES TO ' + nameOf(has.leftGame.to) : has.leftGame.props ? 'THEIR PROPERTIES GO UP FOR AUCTION' : 'EVERYONE ELSE PLAYS ON'); }
     if (has.trade) { sfx.trade(); banner('TRADE!', 1800, 'green', nameOf(has.trade.from) + ' ↔ ' + nameOf(has.trade.to)); }
     if (has.tradeOffer) sfx.trade();
     if (has.monopoly) {
@@ -1010,7 +1012,7 @@
     $('#winName').textContent = w ? w.name : 'NOBODY';
     F.fit($('#winName'));
     $('#winScore').textContent = w ? money(w.net) + ' NET WORTH' : '';
-    $('#winAll').innerHTML = rk.map(function (r) { var c = colorOf(idxOf(r.id)); return '<div style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="pl">' + r.place + '.</span><span class="nm">' + esc(pieceOf(r.id) + ' ' + r.name) + '</span><span class="nt">' + (r.out ? 'BANKRUPT' : money(r.net)) + (r.out ? '<small>' + (r.out === 1 ? 'FIRST OUT' : 'OUT #' + r.out) + '</small>' : '<small>' + money(r.cash) + ' CASH</small>') + '</span></div>'; }).join('');
+    $('#winAll').innerHTML = rk.map(function (r) { var c = colorOf(idxOf(r.id)); return '<div style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="pl">' + r.place + '.</span><span class="nm">' + esc(pieceOf(r.id) + ' ' + r.name) + '</span><span class="nt">' + (r.out ? (r.left ? 'LEFT' : 'BANKRUPT') : money(r.net)) + (r.out ? '<small>' + (r.out === 1 ? 'FIRST OUT' : 'OUT #' + r.out) + '</small>' : '<small>' + money(r.cash) + ' CASH</small>') + '</span></div>'; }).join('');
     $('#winAwards').innerHTML = (g.awards || []).map(function (a) { return '<div class="aw ' + a.key + '"><small>' + esc(a.title) + '</small><b>' + esc(a.name) + '</b><i>' + esc(a.note) + '</i></div>'; }).join('');
     document.querySelectorAll('#winAwards b').forEach(function (n) { F.fit(n); });
     $('#winNext').textContent = 'Play again from this computer, or ' + nameOf(s.captain) + ' can from their phone.';

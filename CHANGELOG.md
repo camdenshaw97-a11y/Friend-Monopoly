@@ -6,6 +6,20 @@ glance which version a screen is running.
 
 Times are Pacific.
 
+## 1.4 · October 26, 2026
+
+**Leaving mid-game**
+- **Leave the game** link at the bottom of every phone during a game. It asks first, in the
+  game's own style, and says what happens: you're out for good, your cash goes back to the bank
+  and your properties go up for auction (or, if you're in the middle of owing someone, everything
+  goes to them). Everyone else keeps playing; with one player left, they win.
+- Leaving while it's someone else's move no longer cuts their move short: their piece finishes,
+  then the leaver's properties are auctioned, then the next turn starts. Leaving on your own turn
+  moves the game straight on.
+- The TV shows "NAME LEFT", the plate says LEFT instead of BANKRUPT, and so does the final
+  ranking. Other phones get a note.
+- **Fix:** long names on the narrow spaces (Connecticut, Mediterranean) were splitting mid-word.
+
 ## 1.3 · October 25, 2026
 
 **Build a whole set from one tap**

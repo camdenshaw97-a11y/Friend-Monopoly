@@ -23,6 +23,10 @@ rules: it follows the official ones.
 Once a game has started nobody new can join. If your phone dies, reopen the page and join with
 the same name: you get your seat and your money back.
 
+To quit for good mid-game, tap **Leave the game** at the bottom of your phone. It counts as
+going bankrupt: your properties go up for auction (or to whoever you owe right then) and
+everyone else plays on.
+
 ## Rules it follows
 
 The rulebook, not the house rules.

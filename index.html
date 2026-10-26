@@ -151,6 +151,7 @@
   .houses i { width: 11px; height: 10px; border-radius: 0 0 2px 2px; background: #2fbd5e; position: relative; margin-top: 5px; }
   .houses i::before { content: ""; position: absolute; left: -1px; right: -1px; top: -5px; height: 5px; background: #1a8f45; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
   .houses i.h { width: 26px; background: var(--red); } .houses i.h::before { background: #9b120b; }
+  .leaveLink { display: block; text-align: center; margin: 22px 0 8px; color: #9ccbb1; font-size: 14px; }
   .setrows { background: #ffffff0f; border-radius: 14px; padding: 4px 14px; margin: 0 0 10px; }
   .setrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #ffffff14; font-size: 15px; }
   .setrow:last-child { border-bottom: 0; }
@@ -538,6 +539,7 @@
     var h = '<div class="top" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(me.piece || '') + '</span><div class="nm">' + esc(me.name) + '<small>' + (me.bankrupt ? 'BANKRUPT' : esc(nameOfSpace(me.pos)) + (me.jail ? ' · IN JAIL' : '')) + '</small></div><div class="money"><span data-key="myCash" data-live>' + money(me.cash) + '</span><small>NET ' + money((g.players[me.id] || {}).net || 0) + '</small></div></div>';
     h += mainCard(has);
     h += tabs();
+    h += '<a class="link leaveLink" href="#" data-a="leave">' + (S.phase === 'gameOver' || me.bankrupt ? 'Leave this room' : 'Leave the game') + '</a>';
     F.morph($('#play'), h);
     F.countTo($('[data-key="myCash"]'), me.cash, 500);
     feel(has);
@@ -819,6 +821,7 @@
     if (has.debt && has.debt.pid === me.id) { sfx.horn(); buzzPhone([120, 60, 120]); }
     if (has.paid && has.paid.pid === me.id) sfx.pay();
     if (has.bankrupt && has.bankrupt.pid === me.id) { sfx.crash(); pop('bad', 'BANKRUPT', 'You’re out', 2200); }
+    if (has.leftGame && has.leftGame.pid !== me.id) toast(pname(has.leftGame.pid) + ' left the game.' + (has.leftGame.to === me.id ? ' Everything they had is yours.' : ''));
     if (has.bankrupt && has.bankrupt.to === me.id) { sfx.cash(); pop('good', 'EVERYTHING', pname(has.bankrupt.pid) + ' went bankrupt to you', 2000); }
     if (has.tradeOffer && has.tradeOffer.to === me.id) { sfx.trade(); buzzPhone([60, 40, 60]); if (ui.tab !== 'trade') toast(pname(has.tradeOffer.from) + ' sent you a trade. It’s in the Trade tab.'); }
     if (has.trade && (has.trade.from === me.id || has.trade.to === me.id)) { sfx.trade(); pop('good', 'TRADED', 'with ' + pname(has.trade.from === me.id ? has.trade.to : has.trade.from)); if (ui.trade) ui.trade = null; }
@@ -840,7 +843,15 @@
       case 'pieceCustom': { var pc = ($('#emojiIn').value || '').trim(); if (!pc) { toast('Type an emoji first.'); break; } ui.piece = pc; send({ t: 'piece', piece: pc }); F.store.set('mon.piece', pc); break; }
       case 'start': send({ t: 'h', a: 'start' }); break;
       case 'lobby': send({ t: 'h', a: 'lobby' }); break;
-      case 'leave': F.confirm('LEAVE THIS ROOM?', S.game ? 'Leaving mid-game counts as going bankrupt.' : 'You can join again any time.', 'Leave', !!S.game).then(function (ok) { if (ok) { send({ t: 'leave' }); backToJoin(); } }); break;
+      case 'leave': {
+        var g = S.game, live = g && S.phase !== 'gameOver' && me.playing && !me.bankrupt, txt;
+        if (!g) txt = 'You can join again any time.';
+        else if (!live) txt = 'You can come back to watch with the same name.';
+        else if (me.debt && me.debt.to && me.debt.to !== 'bank' && me.debt.to !== 'each') txt = 'You’re out for good, and since you owe ' + pname(me.debt.to) + ', everything you have goes to them.';
+        else txt = 'You’re out for good. Your cash goes back to the bank and your properties go up for auction. Everyone else keeps playing.';
+        F.dialog({ title: live ? 'LEAVE THE GAME?' : 'LEAVE THIS ROOM?', text: txt, buttons: [{ label: 'Leave', kind: 'red', value: true }, { label: 'Stay', kind: 'ghost', value: false }] }).then(function (ok) { if (ok) { send({ t: 'leave' }); F.store.del('mon.me'); backToJoin(live ? 'You left the game.' : ''); } });
+        break;
+      }
       case 'tab': ui.tab = v; if (v !== 'chat') ui.chatWith = null; render([]); break;
       case 'roll': b.disabled = true; b.classList.add('spin'); sfx.shake(); buzzPhone(30); send({ t: 'roll' }); break;
       case 'payJail': send({ t: 'payJail' }); break;

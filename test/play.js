@@ -382,8 +382,45 @@ async function main() {
   tvC.send({ t: 'h', a: 'endGame' });
   await tvC.until(s => s.phase === 'gameOver');
 
+  /* =============================== game 5: leaving mid-game */
+  const tvD = new Screen('tvD'); await tvD.ready;
+  tvD.send({ t: 'create', custom: {} });
+  await tvD.until((s, l) => l.created);
+  const codeD = tvD.last.created.code;
+  const rs = [];
+  for (const n of ['Rae', 'Sid', 'Tom']) { const p = new Screen(n); await p.ready; p.send({ t: 'join', code: codeD, name: n }); rs.push(p); }
+  for (const p of rs) await p.until((s, l) => l.joined && s);
+  tvD.send({ t: 'h', a: 'settings', mode: 'last', turnSecs: 0 });
+  await tvD.until(s => s.settings.mode === 'last');
+  tvD.send({ t: 'h', a: 'start' });
+  await tvD.until(s => s.phase === 'turn', 3000);
+  const rD = rooms.get(codeD), gD = rD.game;
+  const mover = gD.cur, leaver = gD.order.find(x => x !== mover), third = gD.order.find(x => x !== mover && x !== leaver);
+  const leaverPhone = rs.find(p => id(p) === leaver), moverPhone = rs.find(p => id(p) === mover);
+  gD.props[39] = { owner: leaver, h: 0, m: false }; gD.props[37] = { owner: leaver, h: 0, m: false };
+  // the mover's piece is walking when someone else leaves
+  gD.players[mover].pos = 0; gD.roll = { d1: 3, d2: 1, dbl: false, n: 0 };
+  _t.move(rD, mover, 4, { kind: 'roll' });
+  require('../server').pushAll(rD);
+  await tvD.until(s => s.phase === 'moving');
+  leaverPhone.send({ t: 'leave' });
+  check('the leaver is told they left', await leaverPhone.until((s, l) => l.left));
+  check('they are out, marked as left', await tvD.until(s => s.game.players[leaver].bankrupt && s.game.players[leaver].left));
+  check("someone else's move carries on", await tvD.until(s => s.game.log.some(l => /lands on Income Tax/.test(l.text)), 3000));
+  check("the leaver's properties go up for auction after it", await tvD.until(s => s.phase === 'auction' && [37, 39].includes(s.game.auction.space), 6000));
+  for (const p of rs.filter(p => id(p) !== leaver)) p.send({ t: 'pass' });
+  await tvD.until(s => s.phase === 'auction' && s.game.auction.space !== tvD.state.game.auction.space || s.phase !== 'auction', 4000);
+  for (const p of rs.filter(p => id(p) !== leaver)) p.send({ t: 'pass' });
+  check('then the game goes on to the next player', await tvD.until(s => s.phase === 'turn' && s.game.cur !== leaver, 8000));
+  // now the player whose turn it is leaves: a two-player game ends
+  const curNow = tvD.state.game.cur, nowPhone = rs.find(p => id(p) === curNow);
+  nowPhone.send({ t: 'leave' });
+  check('when only one is left, they win', await tvD.until(s => s.phase === 'gameOver' && s.game.why === 'last' && s.game.winner !== curNow && s.game.winner !== leaver, 4000));
+  check('the ranking says who left', tvD.state.game.ranking.filter(r => r.left).length === 2);
+  void third; void moverPhone;
+
   console.log(failures ? failures + ' FAILED' : 'all good');
-  for (const p of [tv, tvB, tvC, ...ps, ...qs]) { try { p.close(); } catch (e) { /* already closed */ } }
+  for (const p of [tv, tvB, tvC, tvD, ...ps, ...qs, ...rs]) { try { p.close(); } catch (e) { /* already closed */ } }
   server.close();
   for (const r of rooms.values()) { clearTimeout(r.timer); clearTimeout(r.endTimer); clearTimeout(r.backupTimer); clearTimeout(r.tidyTimer); clearTimeout(r.botTimer); }
   process.exit(failures ? 1 : 0);
