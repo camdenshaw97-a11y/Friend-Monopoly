@@ -41,7 +41,9 @@ The rulebook, not the house rules.
   and move anyway.
 - **Building:** only with the whole color group, none of it mortgaged, evenly across the group,
   $50 to $200 a house as printed, four houses before a hotel. The bank has 32 houses and 12
-  hotels. Sell buildings back for half, evenly.
+  hotels. Sell buildings back for half, evenly. On the phone, open any street of a set you own
+  and build or sell across the whole set from there; the game picks the street that keeps it
+  even.
 - **Mortgages** pay half the price; lifting one costs that plus 10%. Buildings in the group have
   to be sold first.
 - **Trading** any time, with anyone: properties (buildings in the group sold first), cash and

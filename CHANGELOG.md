@@ -6,6 +6,15 @@ glance which version a screen is running.
 
 Times are Pacific.
 
+## 1.3 · October 25, 2026
+
+**Build a whole set from one tap**
+- When you own a whole color group, opening any street in it shows the set: every street with
+  its houses, a NEXT tag on the one the next house goes on, and **Build a house** / **Sell a
+  house** buttons that always keep the set even. No more opening each street in turn. The
+  usual even-building rule still decides where the next house lands (fewest houses first).
+- **Fix:** "Nobody yet. Scan the code to join." is centered in the players box.
+
 ## 1.2 · October 25, 2026
 
 **Boards that look like where they are, colors, and a few fixes**

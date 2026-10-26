@@ -936,6 +936,35 @@ function build(room, p, i) {
   fx(room, 'build', { pid: p.id, space: i, h: pr.h });
 }
 
+// Building across a whole set from one tap: the next house goes on the street in the group with
+// the fewest (the cheapest-to-rent one first when tied), so the set always builds evenly.
+function nextToBuild(g, pid, i) {
+  if (!g.props[i] || g.props[i].owner !== pid || g.spaces[i].t !== 'prop' || !ownsGroup(g, pid, i)) return null;
+  const mem = groupProps(g, i).slice().sort((a, b) => (g.props[a].h - g.props[b].h) || (a - b));
+  for (const k of mem) if (!whyNotBuild(g, pid, k)) return k;
+  return null;
+}
+function nextToSell(g, pid, i) {
+  if (!g.props[i] || g.props[i].owner !== pid || g.spaces[i].t !== 'prop' || !ownsGroup(g, pid, i)) return null;
+  const mem = groupProps(g, i).slice().sort((a, b) => (g.props[b].h - g.props[a].h) || (b - a));
+  for (const k of mem) if (!whyNotSell(g, pid, k)) return k;
+  return null;
+}
+function buildSet(room, p, i) {
+  const g = room.game;
+  if (!g || g.phase === 'gameOver' || g.phase === 'rolloff') return;
+  const k = nextToBuild(g, p.id, i);
+  if (k == null) return send(p.ws, { t: 'error', msg: whyNotBuild(g, p.id, i) || 'Nothing to build.' });
+  build(room, p, k);
+}
+function sellSet(room, p, i) {
+  const g = room.game;
+  if (!g || g.phase === 'gameOver') return;
+  const k = nextToSell(g, p.id, i);
+  if (k == null) return send(p.ws, { t: 'error', msg: 'Nothing to sell.' });
+  sell(room, p, k);
+}
+
 function whyNotSell(g, pid, i) {
   const pr = g.props[i];
   if (!pr || pr.owner !== pid || !pr.h) return 'nothing to sell';
@@ -1551,8 +1580,11 @@ function stateFor(room, pub, p) {
     s.me.props = {};
     for (const i of Object.keys(g.props)) {
       if (g.props[i].owner !== p.id) continue;
+      const nb = g.spaces[i].t === 'prop' ? nextToBuild(g, p.id, Number(i)) : null, ns = g.spaces[i].t === 'prop' ? nextToSell(g, p.id, Number(i)) : null;
       s.me.props[i] = {
         build: g.spaces[i].t === 'prop' ? whyNotBuild(g, p.id, Number(i)) : 'n/a',
+        buildNext: nb, buildNextWhy: g.spaces[i].t === 'prop' && nb == null ? whyNotBuild(g, p.id, Number(i)) : null,
+        sellNext: ns,
         sell: whyNotSell(g, p.id, Number(i)),
         mortgage: whyNotMortgage(g, p.id, Number(i)),
         lift: g.props[i].m ? (me.cash >= liftCost(g.spaces[i]) ? null : 'You need ' + money(liftCost(g.spaces[i])) + '.') : 'n/a',
@@ -1747,6 +1779,8 @@ function onMessage(ws, m) {
     case 'bid': bid(room, p, m.amount); break;
     case 'pass': passAuction(room, p); break;
     case 'build': build(room, p, Number(m.i)); break;
+    case 'buildSet': buildSet(room, p, Number(m.i)); break;
+    case 'sellSet': sellSet(room, p, Number(m.i)); break;
     case 'sell': sell(room, p, Number(m.i)); break;
     case 'mortgage': mortgage(room, p, Number(m.i)); break;
     case 'unmortgage': unmortgage(room, p, Number(m.i)); break;

@@ -213,6 +213,26 @@ async function main() {
   check('selling must come down evenly too', G().props[3].h === 4);
   ann.send({ t: 'sell', i: 1 });
   check('a hotel sells back to four houses for half a house', await tv.until(s => s.game.props[1].h === 4 && s.game.bank.hotels === 12));
+  // building across the set from one tap: 1 has 4, 3 has 4 after the hotel sale
+  ann.send({ t: 'buildSet', i: 3 });
+  check('build-on-the-set puts the next house where it belongs (a hotel on the first street)', await tv.until(s => s.game.props[1].h === 5 && s.game.props[3].h === 4));
+  ann.send({ t: 'buildSet', i: 1 });
+  check('and then on the other', await tv.until(s => s.game.props[3].h === 5));
+  ann.send({ t: 'buildSet', i: 1 });
+  await wait(60);
+  check('nothing left to build on a full set', G().props[1].h === 5 && G().props[3].h === 5 && /hotel/i.test(ann.errors[ann.errors.length - 1]));
+  ann.send({ t: 'sellSet', i: 3 });
+  check('sell-from-the-set takes from the fullest street', await tv.until(s => (s.game.props[1].h === 4) !== (s.game.props[3].h === 4) && (s.game.props[1].h === 5 || s.game.props[3].h === 5)));
+  ann.send({ t: 'sellSet', i: 3 });
+  check('then evens it out', await tv.until(s => s.game.props[1].h === 4 && s.game.props[3].h === 4));
+  check('the phone is told which street is next', ann.state.me.props[1].buildNext === 1 || ann.state.me.props[1].buildNext === 3);
+  ann.send({ t: 'sell', i: 1 });
+  await tv.until(s => s.game.props[1].h === 3);
+  for (let k = 0; k < 7; k++) { ann.send({ t: 'sellSet', i: 1 }); await wait(40); }
+  await tv.until(s => s.game.props[1].h === 0 && s.game.props[3].h === 0);
+  check('the houses are all back in the bank', G().bank.houses === 32 && G().bank.hotels === 12);
+  ann.send({ t: 'build', i: 1 });
+  await tv.until(s => s.game.props[1].h === 1);
   const cashBefore = G().players[A].cash;
   ann.send({ t: 'mortgage', i: 9 });
   check('mortgaging pays half the price', await tv.until(s => s.game.props[9].m && s.game.players[A].cash === cashBefore + 60));
@@ -269,7 +289,7 @@ async function main() {
   // time runs out: ranked by net worth
   const ended = await playUntil(ps, tv, s => s.phase === 'gameOver', 30000, seen);
   check('the timed game ends', ended, 'phase ' + tv.state.phase);
-  check("it ended because time ran out", tv.state.game.why === 'time');
+  check("it ended because time ran out (or everyone but one went broke first)", tv.state.game.why === 'time' || tv.state.game.why === 'last', tv.state.game.why);
   const rk = tv.state.game.ranking;
   const live = rk.filter(r => !r.out), gone = rk.filter(r => r.out);
   check('the living are ranked by net worth', live.every((r, i) => i === 0 || live[i - 1].net >= r.net));

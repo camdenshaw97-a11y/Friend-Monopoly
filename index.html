@@ -151,9 +151,17 @@
   .houses i { width: 11px; height: 10px; border-radius: 0 0 2px 2px; background: #2fbd5e; position: relative; margin-top: 5px; }
   .houses i::before { content: ""; position: absolute; left: -1px; right: -1px; top: -5px; height: 5px; background: #1a8f45; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
   .houses i.h { width: 26px; background: var(--red); } .houses i.h::before { background: #9b120b; }
+  .setrows { background: #ffffff0f; border-radius: 14px; padding: 4px 14px; margin: 0 0 10px; }
+  .setrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #ffffff14; font-size: 15px; }
+  .setrow:last-child { border-bottom: 0; }
+  .setrow b { font-weight: 700; }
+  .setrow small { color: #9ccbb1; font-weight: 600; font-size: 12px; }
+  .setrow.next b::after { content: "NEXT"; font: 400 10px/1 var(--display); letter-spacing: .14em; color: #2a1800; background: var(--gold); border-radius: 999px; padding: 3px 6px 1px; margin-left: 8px; vertical-align: 2px; }
   .acts { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
   .acts .btn { margin-top: 0; display: flex; justify-content: space-between; align-items: center; padding-left: 22px; padding-right: 22px; font-size: 23px; }
-  .acts .btn b { font: 800 18px var(--letter); }
+  .acts .btn b { font: 800 18px var(--letter); white-space: nowrap; }
+  .acts .btn span { text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .acts .btn span small { display: block; font: 700 12px var(--text); letter-spacing: .04em; opacity: .75; margin-top: 2px; text-transform: none; }
   .acts .why { grid-column: 1 / -1; color: #ffb4ae; font-size: 13px; text-align: center; line-height: 1.4; min-height: 18px; }
   .bids { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
   .bids .btn { margin-top: 0; font-size: 21px; }
@@ -662,13 +670,25 @@
     var h = deed(i);
     if (pr && pr.owner === me.id && !me.bankrupt) {
       var acts = me.props[i] || {}, sp = B.LAYOUT[i], why = [];
-      var b = function (a, label, amount, reason, cls) { if (reason) why.push(reason); return '<button class="btn ' + (cls || '') + '" data-a="' + a + '" data-i="' + i + '"' + (reason ? ' disabled' : '') + '><span>' + label + '</span><b>' + amount + '</b></button>'; };
+      var b = function (a, label, amount, reason, cls, sub) { if (reason) why.push(reason); return '<button class="btn ' + (cls || '') + '" data-a="' + a + '" data-i="' + i + '"' + (reason ? ' disabled' : '') + '><span>' + label + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span><b>' + amount + '</b></button>'; };
+      var mem = sp.t === 'prop' ? B.members(sp.g) : [], mine = mem.every(function (k) { return g.props[k] && g.props[k].owner === me.id; });
+      if (sp.t === 'prop' && mine) {
+        // The whole set: build and sell from here, evenly, without opening each street.
+        h += '<div class="setrows">' + mem.map(function (k) { var pk = g.props[k]; return '<div class="setrow' + (k === i ? ' here' : '') + (k === acts.buildNext ? ' next' : '') + '"><b>' + esc(nameOfSpace(k)) + '</b>' + (pk.m ? '<small>mortgaged</small>' : houseHtml(pk.h) || '<small>no houses</small>') + '</div>'; }).join('') + '</div>';
+        var nb = acts.buildNext, ns = acts.sellNext;
+        h += '<div class="acts">';
+        h += b('buildSet', nb != null ? (g.props[nb].h === 4 ? 'Build a hotel' : 'Build a house') : 'Build on the set', '−' + money(sp.house), nb == null ? (acts.buildNextWhy || 'Nothing left to build.') : null, 'gold', nb != null ? 'on ' + nameOfSpace(nb) : null);
+        if (ns != null) h += b('sellSet', g.props[ns].h === 5 ? 'Sell the hotel' : 'Sell a house', '+' + money(sp.house / 2), null, '', 'on ' + nameOfSpace(ns));
+        if (pr.m) h += b('unmortgage', 'Lift the mortgage', '−' + money(acts.liftCost), acts.lift, 'gold', nameOfSpace(i));
+        else h += b('mortgage', 'Mortgage', '+' + money(sp.price / 2), acts.mortgage, '', nameOfSpace(i) + ' only');
+      } else {
       h += '<div class="acts">';
       if (pr.m) h += b('unmortgage', 'Lift the mortgage', '−' + money(acts.liftCost), acts.lift, 'gold');
       else {
         if (sp.t === 'prop') h += b('build', pr.h === 4 ? 'Build a hotel' : 'Build a house', '−' + money(sp.house), acts.build, 'gold');
         if (pr.h) h += b('sell', pr.h === 5 ? 'Sell the hotel' : 'Sell a house', '+' + money(sp.house / 2), acts.sell);
         h += b('mortgage', 'Mortgage it', '+' + money(sp.price / 2), acts.mortgage);
+      }
       }
       h += '<div class="why">' + esc(why.filter(function (w) { return w && w !== 'n/a' && w !== 'nothing to sell' && w !== 'not yours'; }).join(' ')) + '</div></div>';
     }
@@ -832,7 +852,7 @@
       case 'pass': send({ t: 'pass' }); break;
       case 'payDebt': send({ t: 'payDebt' }); break;
       case 'bankrupt': F.confirm('DECLARE BANKRUPTCY?', 'You’re out of the game. Everything you have goes to whoever you owe.', 'I’m out', true).then(function (ok) { if (ok) send({ t: 'bankrupt' }); }); break;
-      case 'build': case 'sell': case 'unmortgage': send({ t: a, i: i }); break;
+      case 'build': case 'sell': case 'unmortgage': case 'buildSet': case 'sellSet': send({ t: a, i: i }); break;
       case 'mortgage': F.confirm('MORTGAGE ' + nameOfSpace(i).toUpperCase() + '?', 'You get ' + money(B.LAYOUT[i].price / 2) + ' now. It collects no rent while mortgaged, and lifting it later costs ' + money(Math.round(B.LAYOUT[i].price / 2 * 1.1)) + '.', 'Mortgage it').then(function (ok) { if (ok) send({ t: 'mortgage', i: i }); }); break;
       case 'sheet': ui.sheet = { deed: i }; renderSheet(); break;
       case 'closeSheet': closeSheet(); break;
