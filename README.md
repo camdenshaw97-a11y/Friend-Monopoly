@@ -11,7 +11,7 @@ rules: it follows the official ones.
    Press `F` for full screen.
 2. Everyone else opens `YOUR-SITE` on their phone (or scans the QR code on the TV) and types the
    4-letter room code and their name. 2 to 8 players. Each phone picks a piece (one of the quick
-   picks, or any emoji from the keyboard) and a color.
+   picks, any emoji from the keyboard, or a photo from the camera or camera roll) and a color.
 3. Short a few people? **+ Add a bot** on the TV. Bots roll, buy, bid, build, trade and pay up
    like anyone else.
 4. On the TV, pick the board, the cards, how the game ends, the bidding clock and (if you want

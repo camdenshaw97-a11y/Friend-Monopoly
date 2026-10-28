@@ -83,6 +83,13 @@
   .swatches button { aspect-ratio: 1; width: 100%; min-width: 0; padding: 0; border: 0; border-radius: 50%; background: linear-gradient(var(--c1), var(--c2)); font-size: 20px; box-shadow: 0 3px 0 #0006; transition: transform .1s; }
   .swatches button.on { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--c1); transform: scale(1.08); }
   .swatches button:disabled { opacity: .35; cursor: default; }
+  .swatches button img.pc { width: 64%; height: 64%; margin: 18%; }
+  .photoRow { display: flex; gap: 10px; margin-top: 12px; align-items: center; padding: 10px; border-radius: 16px; background: #ffffff0f; }
+  .photoRow.on { background: #ffcc3322; box-shadow: inset 0 0 0 2px var(--gold); }
+  .photoRow .ph { width: 52px; height: 52px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-size: 26px; background: #ffffff1a; overflow: hidden; box-shadow: 0 0 0 3px #fff3; }
+  .photoRow .tx { flex: 1; font-size: 14px; color: #cfe6d8; line-height: 1.4; }
+  .photoRow .btn { width: auto; margin: 0; padding: 10px 14px 8px; font-size: 18px; flex: none; }
+  .top .tk, .plist .tk, .chatList .tk, .who span i, .chatHead .tk { overflow: hidden; }
   .emojiIn { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
   .emojiIn input { width: 74px; flex: none; font-size: 30px; text-align: center; background: #fff; border: 0; border-radius: 14px; padding: 8px 4px; outline: none; }
   .emojiIn input:focus { box-shadow: 0 0 0 3px var(--gold); }
@@ -403,7 +410,7 @@
     joinBusy(true);
     var nm = nameIn.value.trim();
     if (sess && sess.token && sess.code === codeIn.value && sess.name === nm.toUpperCase()) { triedRejoinByName = false; start({ t: 'rejoin', code: sess.code, token: sess.token }); }
-    else start({ t: 'join', code: codeIn.value, name: nm, piece: F.store.get('mon.piece', ''), color: F.store.get('mon.color', null) });
+    else start({ t: 'join', code: codeIn.value, name: nm, piece: F.store.get('mon.piece', ''), color: F.store.get('mon.color', null), photo: F.store.get('mon.photo', null) });
   });
   var busyTimer;
   function joinBusy(on) {
@@ -514,12 +521,13 @@
   /* ------------------------------------------------------------ lobby */
   function renderLobby() {
     var h = '<div class="bar"><span>ROOM <b>' + esc(S.code) + '</b></span><span>' + esc(me.name) + (me.isCaptain ? ' · CAPTAIN' : '') + '</span></div>';
-    h += '<div class="card mine" data-key="piece"><h3><span>YOUR PIECE</span><small>' + esc(me.piece) + ' · TAP TO CHANGE</small></h3><div class="pieces">' +
-      S.pieces.map(function (pc) { var taken = S.players.filter(function (p) { return p.piece === pc && p.id !== me.id; })[0]; return '<button data-a="piece" data-p="' + esc(pc) + '" class="' + (me.piece === pc ? 'on' : '') + '"' + (taken ? ' disabled title="' + esc(taken.name) + '"' : '') + '>' + pc + '</button>'; }).join('') + '</div>';
+    h += '<div class="card mine" data-key="piece"><h3><span>YOUR PIECE</span><small>' + (me.photo ? 'YOUR PHOTO' : esc(me.piece)) + ' · TAP TO CHANGE</small></h3><div class="pieces">' +
+      S.pieces.map(function (pc) { var taken = S.players.filter(function (p) { return p.piece === pc && p.id !== me.id; })[0]; return '<button data-a="piece" data-p="' + esc(pc) + '" class="' + (me.piece === pc && !me.photo ? 'on' : '') + '"' + (taken ? ' disabled title="' + esc(taken.name) + '"' : '') + '>' + pc + '</button>'; }).join('') + '</div>';
     h += '<div class="emojiIn"><input id="emojiIn" data-key="emojiIn" maxlength="8" placeholder="🙂" inputmode="text" value="' + esc(ui.piece) + '"><span>Or any emoji from your keyboard.</span><button class="btn gold" data-a="pieceCustom">Use it</button></div>';
-    h += '<div class="label">YOUR COLOR</div><div class="swatches">' + COLORS.map(function (c, n) { var taken = S.players.filter(function (p) { return p.color === n && p.id !== me.id; })[0]; return '<button data-a="color" data-n="' + n + '" class="' + (me.color === n ? 'on' : '') + '" style="--c1:' + c[0] + ';--c2:' + c[1] + '"' + (taken ? ' disabled title="' + esc(taken.name) + '"' : '') + '>' + (me.color === n ? esc(me.piece || '') : (taken ? esc(taken.piece) : '')) + '</button>'; }).join('') + '</div></div>';
+    h += '<div class="photoRow' + (me.photo ? ' on' : '') + '"><span class="ph">' + (me.photo ? '<img class="pc" src="' + esc(me.photo) + '" alt="">' : '📷') + '</span><span class="tx">' + (me.photo ? 'Your photo is your piece.' : 'Or use a photo: take one, or pick one from your camera roll.') + '</span><button class="btn gold" data-a="photoPick">' + (me.photo ? 'Change' : 'Use a photo') + '</button>' + (me.photo ? '<button class="btn ghost" data-a="photoClear">✕</button>' : '') + '</div>';
+    h += '<div class="label">YOUR COLOR</div><div class="swatches">' + COLORS.map(function (c, n) { var taken = S.players.filter(function (p) { return p.color === n && p.id !== me.id; })[0]; return '<button data-a="color" data-n="' + n + '" class="' + (me.color === n ? 'on' : '') + '" style="--c1:' + c[0] + ';--c2:' + c[1] + '"' + (taken ? ' disabled title="' + esc(taken.name) + '"' : '') + '>' + (me.color === n ? F.pieceHtml(me) : (taken ? F.pieceHtml(taken) : '')) + '</button>'; }).join('') + '</div></div>';
     h += '<div class="card" data-key="players"><h3><span>PLAYERS</span><small>' + S.players.length + ' OF ' + S.maxPlayers + '</small></h3><div class="who">' +
-      (S.players.length ? S.players.map(function (p) { return '<span class="' + (p.id === me.id ? 'me' : '') + (p.on ? '' : ' off') + '"><i style="background:' + colorOf(p.id)[0] + '">' + esc(p.piece) + '</i>' + esc(p.name) + (p.bot ? '<span class="tag">BOT</span>' : '') + '</span>'; }).join('') : '<em>Nobody yet</em>') + '</div>';
+      (S.players.length ? S.players.map(function (p) { return '<span class="' + (p.id === me.id ? 'me' : '') + (p.on ? '' : ' off') + '"><i style="background:' + colorOf(p.id)[0] + '">' + F.pieceHtml(p) + '</i>' + esc(p.name) + (p.bot ? '<span class="tag">BOT</span>' : '') + '</span>'; }).join('') : '<em>Nobody yet</em>') + '</div>';
     h += '<p class="note">The TV picks the board, the cards and how the game ends. ' + (me.isCaptain ? 'You can start it from here or from the TV.' : 'The TV, or ' + esc(pname(S.captain)) + ', starts it.') + '</p>';
     if (me.isCaptain) h += '<button class="btn gold big' + (S.players.length >= S.minPlayers ? ' glow' : '') + '" data-a="start"' + (S.players.length >= S.minPlayers ? '' : ' disabled') + '>Start the game</button>';
     h += '</div>';
@@ -566,7 +574,7 @@
 
   function renderPlay(has) {
     var g = G(), c = colorOf(me.id);
-    var h = '<div class="top" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(me.piece || '') + '</span><div class="nm">' + esc(me.name) + '<small>' + (me.bankrupt ? 'BANKRUPT' : esc(nameOfSpace(me.pos)) + (me.jail ? ' · IN JAIL' : '')) + '</small></div><div class="money"><span data-key="myCash" data-live>' + money(me.cash) + '</span><small>NET ' + money((g.players[me.id] || {}).net || 0) + '</small></div></div>';
+    var h = '<div class="top" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + F.pieceHtml(me) + '</span><div class="nm">' + esc(me.name) + '<small>' + (me.bankrupt ? 'BANKRUPT' : esc(nameOfSpace(me.pos)) + (me.jail ? ' · IN JAIL' : '')) + '</small></div><div class="money"><span data-key="myCash" data-live>' + money(me.cash) + '</span><small>NET ' + money((g.players[me.id] || {}).net || 0) + '</small></div></div>';
     // The top card is always the same height, so the tabs and buttons below never move.
     h += mainCard(has).replace('<div class="card', '<div class="card main');
     h += tabs();
@@ -690,7 +698,7 @@
     S.players.forEach(function (p) {
       var pl = g.players[p.id], c = colorOf(p.id);
       var chips = Object.keys(g.props).map(Number).filter(function (i) { return g.props[i].owner === p.id; }).sort(function (a, b) { return a - b; }).map(function (i) { return swatch(i, g.props[i].m ? 'm' : ''); }).join('');
-      h += '<div class="pr" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(p.piece) + '</span><div class="nm">' + esc(p.name) + (p.bot ? ' <span class="tag" style="font:400 11px var(--display);letter-spacing:.14em;padding:3px 6px 1px;border-radius:999px;background:#2a8fd8">BOT</span>' : '') + (g.cur === p.id ? ' · UP' : '') + '<small>' + (pl.bankrupt ? 'Bankrupt' : esc(nameOfSpace(pl.pos)) + (pl.jail ? ' · in jail' : '') + (pl.cards ? ' · ' + pl.cards + ' jail card' + (pl.cards > 1 ? 's' : '') : '')) + '</small><div class="chips">' + chips + '</div></div><div class="cash">' + money(pl.cash) + '<small>NET ' + money(pl.net) + '</small></div></div>';
+      h += '<div class="pr" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + F.pieceHtml(p) + '</span><div class="nm">' + esc(p.name) + (p.bot ? ' <span class="tag" style="font:400 11px var(--display);letter-spacing:.14em;padding:3px 6px 1px;border-radius:999px;background:#2a8fd8">BOT</span>' : '') + (g.cur === p.id ? ' · UP' : '') + '<small>' + (pl.bankrupt ? 'Bankrupt' : esc(nameOfSpace(pl.pos)) + (pl.jail ? ' · in jail' : '') + (pl.cards ? ' · ' + pl.cards + ' jail card' + (pl.cards > 1 ? 's' : '') : '')) + '</small><div class="chips">' + chips + '</div></div><div class="cash">' + money(pl.cash) + '<small>NET ' + money(pl.net) + '</small></div></div>';
     });
     return h + '</div>';
   }
@@ -747,7 +755,7 @@
     var others = S.players.filter(function (p) { return p.id !== me.id && !g.players[p.id].bankrupt; });
     h += '<div class="card" data-key="newTrade"><h3><span>MAKE AN OFFER</span><small>ANY TIME</small></h3>';
     if (me.bankrupt) return h + '<p class="empty">You’re out of the game.</p></div>';
-    h += '<div class="who">' + others.map(function (p) { return '<span class="' + (ui.trade && ui.trade.to === p.id ? 'me' : '') + '" data-a="tradeWith" data-id="' + p.id + '"><i style="background:' + colorOf(p.id)[0] + '">' + esc(p.piece) + '</i>' + esc(p.name) + '</span>'; }).join('') + '</div>';
+    h += '<div class="who">' + others.map(function (p) { return '<span class="' + (ui.trade && ui.trade.to === p.id ? 'me' : '') + '" data-a="tradeWith" data-id="' + p.id + '"><i style="background:' + colorOf(p.id)[0] + '">' + F.pieceHtml(p) + '</i>' + esc(p.name) + '</span>'; }).join('') + '</div>';
     if (ui.trade && ui.trade.to) {
       var tr = ui.trade, them = g.players[tr.to];
       if (!them || them.bankrupt) { ui.trade = null; return h + '</div>'; }
@@ -797,7 +805,7 @@
     if (ui.chatWith) {
       var peer = ui.chatWith, list = chats[peer] || [], c = colorOf(peer);
       markSeen(peer);
-      var h = '<div class="card" data-key="chatWith"><div class="chatHead"><button data-a="chatBack">‹</button><span class="tk" style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;background:linear-gradient(' + c[0] + ',' + c[1] + ')">' + esc(piece(peer)) + '</span><b>' + esc(pname(peer)) + '</b><small style="color:#9ccbb1;font-weight:700;font-size:12px">PRIVATE</small></div>';
+      var h = '<div class="card" data-key="chatWith"><div class="chatHead"><button data-a="chatBack">‹</button><span class="tk" style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;background:linear-gradient(' + c[0] + ',' + c[1] + ')">' + F.pieceHtml(player(peer)) + '</span><b>' + esc(pname(peer)) + '</b><small style="color:#9ccbb1;font-weight:700;font-size:12px">PRIVATE</small></div>';
       h += '<div class="msgs" id="msgs" data-key="msgs">' + (list.length ? list.map(function (m) { return '<div class="msg ' + (m.from === me.id ? 'me' : '') + '">' + esc(m.text) + '</div>'; }).join('') : '<p class="empty">Nothing yet. Only the two of you can see this.</p>') + '</div>';
       h += '<div class="chatIn"><input id="chatIn" data-key="chatIn" maxlength="240" placeholder="Message ' + esc(pname(peer)) + '…" enterkeyhint="send"><button class="btn gold" data-a="chatSend">Send</button></div></div>';
       setTimeout(function () { var m = $('#msgs'); if (m) m.scrollTop = m.scrollHeight; }, 30);
@@ -807,7 +815,7 @@
     if (!others.length) h2 += '<p class="empty">Nobody else to talk to yet.</p>';
     others.forEach(function (p) {
       var list = chats[p.id] || [], last = list[list.length - 1], n = unreadFrom(p.id), c = colorOf(p.id);
-      h2 += '<div class="row" data-a="chatWith" data-id="' + p.id + '" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(p.piece) + '</span><div class="nm">' + esc(p.name) + '<small>' + (last ? esc((last.from === me.id ? 'You: ' : '') + last.text) : 'Say something') + '</small></div>' + (n ? '<span class="n">' + n + '</span>' : '<span class="chev" style="color:#9ccbb1">›</span>') + '</div>';
+      h2 += '<div class="row" data-a="chatWith" data-id="' + p.id + '" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + F.pieceHtml(p) + '</span><div class="nm">' + esc(p.name) + '<small>' + (last ? esc((last.from === me.id ? 'You: ' : '') + last.text) : 'Say something') + '</small></div>' + (n ? '<span class="n">' + n + '</span>' : '<span class="chev" style="color:#9ccbb1">›</span>') + '</div>';
     });
     void g;
     return h2 + '</div>';
@@ -818,7 +826,7 @@
     var g = G(), rk = g.ranking || [], mine = rk.filter(function (r) { return r.id === me.id; })[0] || {};
     var h = '<div class="card mine" data-key="main"><div class="say ' + (mine.place === 1 ? 'good' : '') + '"><b>' + (mine.place === 1 ? 'YOU WIN!' : mine.place ? ordinal(mine.place) + ' PLACE' : 'GAME OVER') + '</b><span>' + esc(g.why === 'time' ? "Time's up. Ranked by net worth." : g.why === 'last' ? 'Last one standing.' : 'The game was ended.') + '</span></div>';
     if (me.awards && me.awards.length) h += '<div style="text-align:center;margin:6px 0 8px">' + me.awards.map(function (k) { var a = (g.awards || []).filter(function (x) { return x.key === k; })[0]; return a ? '<span class="award">' + esc(a.title) + '</span>' : ''; }).join('') + '</div>';
-    h += '<div class="ranks">' + rk.map(function (r) { return '<div><span>' + r.place + '. ' + esc(piece(r.id) + ' ' + r.name) + '</span><b>' + (r.out ? 'bankrupt' : money(r.net)) + '</b></div>'; }).join('') + '</div>';
+    h += '<div class="ranks">' + rk.map(function (r) { return '<div><span>' + r.place + '. ' + F.pieceHtml(player(r.id), true) + ' ' + esc(r.name) + '</span><b>' + (r.out ? 'bankrupt' : money(r.net)) + '</b></div>'; }).join('') + '</div>';
     if (me.stats) h += '<div class="stats" style="margin-top:12px"><div><b>' + money(me.stats.rent) + '</b>RENT TAKEN</div><div><b>' + money(me.stats.rentPaid) + '</b>RENT PAID</div><div><b>' + me.stats.bought + '</b>BOUGHT</div></div>';
     if (me.isCaptain) h += '<button class="btn gold" data-a="lobby">Play again</button>';
     else h += '<p class="note">' + esc(pname(S.captain)) + ' or the TV can start another game.</p>';
@@ -868,7 +876,9 @@
     if (b.tagName === 'A') e.preventDefault();
     sfx.unlock();
     switch (a) {
-      case 'piece': send({ t: 'piece', piece: b.getAttribute('data-p') }); F.store.set('mon.piece', b.getAttribute('data-p')); break;
+      case 'piece': send({ t: 'piece', piece: b.getAttribute('data-p') }); F.store.set('mon.piece', b.getAttribute('data-p')); F.store.del('mon.photo'); break;
+      case 'photoPick': photoIn.value = ''; photoIn.click(); break;
+      case 'photoClear': send({ t: 'photo', data: null }); F.store.del('mon.photo'); break;
       case 'color': send({ t: 'color', n: Number(b.getAttribute('data-n')) }); F.store.set('mon.color', Number(b.getAttribute('data-n'))); break;
       case 'pieceCustom': { var pc = ($('#emojiIn').value || '').trim(); if (!pc) { toast('Type an emoji first.'); break; } ui.piece = pc; send({ t: 'piece', piece: pc }); F.store.set('mon.piece', pc); break; }
       case 'start': send({ t: 'h', a: 'start' }); break;
@@ -936,6 +946,18 @@
     if (!ui.trade) return;
     document.querySelectorAll('input[data-cash]').forEach(function (inp) { ui.trade[inp.getAttribute('data-cash')].cash = Math.max(0, Math.round(Number(inp.value) || 0)); });
   }
+  // The photo picker lives outside the redrawn screens so it survives every update.
+  var photoIn = document.createElement('input');
+  photoIn.type = 'file'; photoIn.accept = 'image/*'; photoIn.style.display = 'none';
+  document.body.appendChild(photoIn);
+  photoIn.addEventListener('change', function () {
+    var f = photoIn.files && photoIn.files[0]; if (!f) return;
+    toast('Getting your photo ready…');
+    F.shrinkPhoto(f).then(function (data) {
+      send({ t: 'photo', data: data });
+      F.store.set('mon.photo', data);
+    }).catch(function () { toast('That photo didn’t work. Try another one.'); });
+  });
   document.addEventListener('input', function (e) { if (e.target.hasAttribute && e.target.hasAttribute('data-cash')) readCash(); if (e.target.id === 'emojiIn') ui.piece = e.target.value; });
 })();
 </script>

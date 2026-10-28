@@ -139,6 +139,18 @@ async function main() {
   await wait(60);
   check("you can't take someone's color", ben.state.me.color !== ann.state.me.color);
   ben.send({ t: 'color', n: 7 });
+  // a photo as a piece: a tiny real JPEG
+  const jpg = 'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0xff, 0xd9]).toString('base64');
+  check('only real images are accepted as photos', require('../server').cleanPhoto(jpg) === jpg && require('../server').cleanPhoto('data:image/jpeg;base64,' + Buffer.from('<script>').toString('base64')) === null && require('../server').cleanPhoto('data:text/html;base64,AAAA') === null && require('../server').cleanPhoto('data:image/jpeg;base64,' + 'A'.repeat(70000)) === null);
+  cal.send({ t: 'photo', data: jpg });
+  check('a photo becomes the piece', await tv.until(s => /^\/photo\/[A-Z]{4}\/.+\?v=/.test(s.players.find(p => p.id === id(cal)).photo || '')));
+  const photoUrl = tv.state.players.find(p => p.id === id(cal)).photo;
+  const got = await new Promise(res => require('http').get('http://localhost:' + PORT + photoUrl, r => { const b = []; r.on('data', c => b.push(c)); r.on('end', () => res({ type: r.headers['content-type'], body: Buffer.concat(b) })); }));
+  check('the TV can load it', got.type === 'image/jpeg' && got.body[0] === 0xff && got.body[1] === 0xd8);
+  check('photos are not pushed with every update', !JSON.stringify(tv.state).includes('base64'));
+  cal.send({ t: 'photo', data: 'data:text/html;base64,PHNjcmlwdD4=' });
+  await wait(60);
+  check('a bad photo is refused and the old one kept', cal.errors.some(e => /photo/.test(e)) && tv.state.players.find(p => p.id === id(cal)).photo === photoUrl);
   check('a free color can be picked', await ben.until(s => s.me.color === 7 && s.players.find(p => p.id === id(ben)).color === 7));
   // a private chat
   ann.send({ t: 'chat', to: id(ben), text: 'sell me baltic later?' });
@@ -264,6 +276,7 @@ async function main() {
   const code2 = tv2.last.created.code;
   const ann2 = new Screen('Ann2'); await ann2.ready;
   ann2.send({ t: 'join', code: code2, name: 'Ann' });
+  check('a saved game keeps photo pieces', !!(tv2.state.players.find(p => p.name === 'CAL') || {}).photo);
   check('Ann gets her seat back by name', await ann2.until(s => s.me && s.me.name === 'ANN' && s.me.cash === savedCash && s.game.turnCount === savedTurn));
   const stranger = new Screen('Zed'); await stranger.ready;
   stranger.send({ t: 'join', code: code2, name: 'Zed' });

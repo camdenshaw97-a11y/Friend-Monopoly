@@ -6,6 +6,18 @@ glance which version a screen is running.
 
 Times are Pacific.
 
+## 1.6 · October 27, 2026
+
+**Your photo as your piece**
+- In the lobby, under the emoji pieces: **Use a photo**. On a phone that opens the usual picker,
+  so you can take a photo or pick one from your camera roll (or any image file on a computer).
+  The phone crops it to a square and shrinks it before sending, so it's quick.
+- Your photo is your piece on the board, in your panel on the TV, in the lobby, in the chat and
+  trade lists, and on the final ranking, inside your color ring.
+- **Change** picks another; **✕** goes back to your emoji. Picking an emoji does the same. Your
+  photo is remembered on your phone for next time, and saved games keep it.
+- Only real images are accepted, and they're kept small.
+
 ## 1.5 · October 27, 2026
 
 **The phone's buttons stay put**

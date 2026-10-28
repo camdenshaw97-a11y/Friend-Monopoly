@@ -6,7 +6,7 @@
   // Change this to rename the game everywhere.
   F.TITLE = 'FRIEND MONOPOLY';
   // Shown small on the start screens. Goes up with every change; CHANGELOG.md says what each one was.
-  F.VERSION = '1.5';
+  F.VERSION = '1.6';
 
   F.$ = function (sel, root) { return (root || document).querySelector(sel); };
   F.esc = function (s) {
@@ -216,6 +216,37 @@
     document.addEventListener('touchstart', function () {}, { passive: true });
   };
 
+
+  /* ---- pieces: an emoji, or a photo the player picked ---- */
+  F.pieceHtml = function (p, inline) {
+    if (!p) return '';
+    if (p.photo) return '<img class="' + (inline ? 'pc-in' : 'pc') + '" src="' + F.esc(p.photo) + '" alt="">';
+    return F.esc(p.piece || '');
+  };
+  // Turns a picked photo into a small square JPEG (centered crop), ready to send.
+  F.shrinkPhoto = function (file, size) {
+    size = size || 160;
+    return new Promise(function (resolve, reject) {
+      if (!file || !/^image\//.test(file.type || 'image/')) return reject(new Error('not an image'));
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight, side = Math.min(w, h);
+          var c = document.createElement('canvas'); c.width = size; c.height = size;
+          var x = c.getContext('2d');
+          x.fillStyle = '#fff'; x.fillRect(0, 0, size, size);
+          x.imageSmoothingQuality = 'high';
+          x.drawImage(img, (w - side) / 2, (h - side) / 2, side, side, 0, 0, size, size);
+          URL.revokeObjectURL(url);
+          var q = 0.85, out = c.toDataURL('image/jpeg', q);
+          while (out.length > 55000 && q > 0.4) { q -= 0.1; out = c.toDataURL('image/jpeg', q); }
+          resolve(out);
+        } catch (e) { URL.revokeObjectURL(url); reject(e); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('could not read')); };
+      img.src = url;
+    });
+  };
 
   /* ---- dialogs styled like the game (instead of the browser's own) ----
      F.dialog({ title, text, buttons: [{ label, kind, value }], input: { placeholder, value, maxlength } })

@@ -58,6 +58,7 @@ const BOT_MS = 1400;                   // a bot thinks this long before it does 
 const AUCTION_CHOICES = [10, 15, 20, 30];
 const COLORS = 8;                      // the eight player colors, by index (the pages hold the swatches)
 const ADD_TIME_CHOICES = [5, 10, 15, 30];
+const PHOTO_MAX = 60000;               // a photo piece: a small square image the phone has already shrunk
 const MINUTE_CHOICES = [30, 45, 60, 90, 120];
 const TURN_CHOICES = [0, 30, 60, 90];  // a clock to roll, buy or settle a debt (0 = no clock)
 
@@ -118,6 +119,15 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=3600' });
       res.end(svg);
     });
+  }
+  const ph = /^\/photo\/([A-Z]{4})\/([\w-]{1,20})$/.exec(p);
+  if (ph) {
+    const room = rooms.get(ph[1]), pl = room && room.players.get(ph[2]);
+    const m = pl && pl.photo && /^data:(image\/[a-z]+);base64,(.*)$/.exec(pl.photo);
+    if (!m) { res.writeHead(404, { 'content-type': 'text/plain' }); return res.end('Not found'); }
+    const body = Buffer.from(m[2], 'base64');
+    res.writeHead(200, { 'content-type': m[1], 'content-length': body.length, 'cache-control': 'public, max-age=86400, immutable', 'x-content-type-options': 'nosniff' });
+    return res.end(body);
   }
   const promo = Object.keys(PROMOS).find(base => p === base || p.startsWith(base + '/'));
   if (promo) return sendPromo(req, res, promo, p.slice(promo.length).replace(/\/$/, ''));
@@ -274,7 +284,7 @@ const spacesOf = room => room.game ? room.game.spaces : Boards.build(themeOf(roo
 function packRoom(room, lean, kind) {
   const data = {
     v: BACKUP_V, at: Date.now(), kind: kind || 'backup', code: room.code, adminToken: room.adminToken,
-    players: [...room.players.values()].map(p => ({ id: p.id, token: p.token, name: p.name, piece: p.piece, color: p.color, bot: !!p.bot })),
+    players: [...room.players.values()].map(p => ({ id: p.id, token: p.token, name: p.name, piece: p.piece, color: p.color, photo: lean ? null : p.photo || null, bot: !!p.bot })),
     order: room.order, settings: room.settings, custom: room.custom, chats: lean ? {} : room.chats,
     game: room.game, fxSeq: room.fxSeq
   };
@@ -301,6 +311,7 @@ function sendBackup(room) {
   let blob;
   try {
     blob = packRoom(room, false);
+    if (blob.length > BACKUP_MAX) blob = packRoom(room, true);
   } catch (e) { return console.error('backup error', e); }
   if (blob.length > BACKUP_MAX) return;
   const msg = JSON.stringify({ t: 'backup', code: room.code, blob, info: saveInfo(room) });
@@ -335,6 +346,7 @@ function hydrateRoom(d, code, opts) {
     else room.players.set(p.id, { id: p.id, token: opts.freshTokens ? rid() : p.token, name: p.name, piece: p.piece, color: p.color, connected: false, ws: null, hold: opts.freshTokens ? 0 : hold, goneAt: Date.now(), waitingFor: true });
   }
   for (const p of room.players.values()) if (!Number.isInteger(p.color)) p.color = freeColor(room);
+  for (const x of d.players) { const p = room.players.get(x.id); if (p) setPhoto(p, cleanPhoto(x.photo)); }
   const g = room.game;
   if (g) {
     g.spaces = Boards.build(Boards.themeById(g.theme, room.custom.boards));
@@ -1534,7 +1546,7 @@ function adminAction(room, m) {
 
 function publicState(room) {
   const g = room.game;
-  const pl = id => { const p = room.players.get(id); return p ? { id: p.id, name: p.name, on: p.connected, piece: p.piece, color: p.color, bot: !!p.bot } : null; };
+  const pl = id => { const p = room.players.get(id); return p ? { id: p.id, name: p.name, on: p.connected, piece: p.piece, color: p.color, photo: p.photoV ? '/photo/' + room.code + '/' + p.id + '?v=' + p.photoV : null, bot: !!p.bot } : null; };
   const theme = themeOf(room);
   const s = {
     code: room.code,
@@ -1575,7 +1587,7 @@ function stateFor(room, pub, p) {
   const s = Object.assign({}, pub);
   const g = room.game;
   const playing = room.order.includes(p.id);
-  s.me = { id: p.id, name: p.name, piece: p.piece, color: p.color, isCaptain: pub.captain === p.id, playing };
+  s.me = { id: p.id, name: p.name, piece: p.piece, color: p.color, photo: p.photoV ? '/photo/' + room.code + '/' + p.id + '?v=' + p.photoV : null, isCaptain: pub.captain === p.id, playing };
   s.me.chats = chatsFor(room, p.id);
   if (g && playing && g.players[p.id]) {
     const me = g.players[p.id];
@@ -1664,6 +1676,19 @@ function showOn(ws, room, admin) {
   room.displays.add(ws);
 }
 
+// A photo piece arrives as a data URL. Keep it small and only allow plain image types.
+function cleanPhoto(s) {
+  s = String(s == null ? '' : s);
+  if (!s || s.length > PHOTO_MAX) return null;
+  const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(s);
+  if (!m) return null;
+  const bytes = Buffer.from(m[2], 'base64');
+  const ok = m[1] === 'jpeg' ? bytes[0] === 0xff && bytes[1] === 0xd8 : m[1] === 'png' ? bytes[0] === 0x89 && bytes[1] === 0x50 : bytes.slice(8, 12).toString() === 'WEBP';
+  return ok ? s : null;
+}
+const photoV = s => crypto.createHash('sha1').update(s).digest('hex').slice(0, 10);
+function setPhoto(p, s) { p.photo = s || null; p.photoV = s ? photoV(s) : null; }
+
 const pieceTaken = (room, piece, except) => [...room.players.values()].some(x => x !== except && x.piece === piece);
 const colorTaken = (room, n, except) => [...room.players.values()].some(x => x !== except && x.color === n);
 function freeColor(room) {
@@ -1725,6 +1750,7 @@ function onMessage(ws, m) {
       const want = cleanPiece(m.piece);
       const wantColor = Number.isInteger(Number(m.color)) && Number(m.color) >= 0 && Number(m.color) < COLORS ? Number(m.color) : null;
       p = { id: rid(6), token: rid(), name, piece: want && !pieceTaken(room, want, null) ? want : freePiece(room), color: wantColor != null && !colorTaken(room, wantColor, null) ? wantColor : freeColor(room), connected: true, ws: null };
+      setPhoto(p, cleanPhoto(m.photo));
       room.players.set(p.id, p);
       room.order.push(p.id);
       fx(room, 'joined', { name: p.name, pid: p.id });
@@ -1768,6 +1794,15 @@ function onMessage(ws, m) {
       if (!pc) { send(ws, { t: 'error', msg: 'Pick one emoji.' }); break; }
       if (pieceTaken(room, pc, p)) { send(ws, { t: 'error', msg: 'Someone already has that one.' }); break; }
       p.piece = pc;
+      setPhoto(p, null);                           // picking an emoji means "not my photo"
+      break;
+    }
+    case 'photo': {
+      if (g) break;
+      if (m.data == null) { setPhoto(p, null); break; }
+      const ph = cleanPhoto(m.data);
+      if (!ph) { send(ws, { t: 'error', msg: "That photo didn't work. Try another one." }); break; }
+      setPhoto(p, ph);
       break;
     }
     case 'color': {
@@ -1865,4 +1900,4 @@ if (require.main === module) {
   process.on('SIGINT', stop);
 }
 
-module.exports = { server, rooms, packRoom, unpackRoom, restoreRoom, loadRoom, rentFor, netWorth, PIECES, pushAll, cleanPiece, _t: { move, charge, settle, land } };
+module.exports = { server, rooms, packRoom, unpackRoom, restoreRoom, loadRoom, rentFor, netWorth, PIECES, pushAll, cleanPiece, cleanPhoto, _t: { move, charge, settle, land } };

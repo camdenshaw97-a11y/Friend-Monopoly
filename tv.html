@@ -133,6 +133,8 @@
   @keyframes goLit { 30% { background: #ffcc33; } }
 
   /* tokens */
+  .tok img.pc { position: relative; z-index: 1; }
+  #lobby .pods li i, .plate .tk { overflow: hidden; }
   .tok { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff8, transparent 50%), linear-gradient(var(--c1), var(--c2)); box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--c2), 0 8px 14px #0008; display: flex; align-items: center; justify-content: center; font-size: 27px; z-index: 5; transition: left .17s ease-out, top .17s ease-out; }
   .tok.jump { transition: left .9s cubic-bezier(.3, 1, .4, 1), top .9s cubic-bezier(.3, 1, .4, 1); }
   .tok.up { z-index: 6; box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--c2), 0 0 24px 6px #fff8, 0 10px 18px #0009; animation: tokUp 1.2s ease-in-out infinite; }
@@ -321,7 +323,7 @@
       <img class="qrbig" id="qr" alt="QR code to join">
       <div class="or">or go to <b id="joinUrl"></b><br>and enter the room code</div>
       <div class="code" id="codeBig"></div>
-      <div class="tip">2 to 8 players, one phone each. Pick your piece on your phone.<br>The game is the banker: nobody has to count money.</div>
+      <div class="tip">2 to 8 players, one phone each. Pick a piece or a photo on your phone.<br>The game is the banker: nobody has to count money.</div>
     </div>
     <div class="pods box"><h4><span id="podHead">PLAYERS</span><span class="bots"><button class="chip sm" id="btnBot">+ Add a bot</button><button class="chip sm" id="btnUnbot" style="display:none">− Remove a bot</button></span></h4><ul id="podList"></ul></div>
     <div class="setup box" id="setup"></div>
@@ -543,7 +545,8 @@
   }
   function nameOf(id) { var p = (S.players || []).filter(function (x) { return x.id === id; })[0]; return p ? p.name : '?'; }
   function idxOf(id) { var k = -1; (S.players || []).forEach(function (p, i) { if (p.id === id) k = i; }); return k; }
-  function pieceOf(id) { var p = (S.players || []).filter(function (x) { return x.id === id; })[0]; return p ? p.piece : '?'; }
+  function playerOf(id) { return (S.players || []).filter(function (x) { return x.id === id; })[0] || null; }
+  function pieceOf(id, inline) { var p = playerOf(id); return p ? F.pieceHtml(p, inline) : '?'; }
 
   function render(fresh) {
     var s = S, has = {};
@@ -566,7 +569,7 @@
     $('#btnBot').style.display = s.players.length < s.maxPlayers ? '' : 'none';
     $('#btnUnbot').style.display = s.players.some(function (p) { return p.bot; }) ? '' : 'none';
     F.morph($('#podList'), s.players.length
-      ? s.players.map(function (p, i) { return '<li data-key="p' + p.id + '" class="' + (p.on ? '' : 'off') + '"><i style="background:' + colorOf(i)[0] + '">' + esc(p.piece) + '</i>' + esc(p.name) + (p.bot ? '<span class="tag">BOT</span>' : '') + '</li>'; }).join('')
+      ? s.players.map(function (p, i) { return '<li data-key="p' + p.id + '" class="' + (p.on ? '' : 'off') + '"><i style="background:' + colorOf(i)[0] + '">' + F.pieceHtml(p) + '</i>' + esc(p.name) + (p.bot ? '<span class="tag">BOT</span>' : '') + '</li>'; }).join('')
       : '<li class="none">Nobody yet. Scan the code to join.</li>');
     var st = s.settings;
     var h = '<h4>SET UP THE GAME</h4>';
@@ -730,10 +733,11 @@
       if (!toks[id]) {
         var t = document.createElement('div'); t.className = 'tok'; toks[id] = t;
         var c = colorOf(idxOf(id)); t.style.setProperty('--c1', c[0]); t.style.setProperty('--c2', c[1]);
-        t.textContent = pieceOf(id);
+        t.innerHTML = pieceOf(id);
         $('#board').appendChild(t);
         placeTok(s, id, false);
       }
+      var want = pieceOf(id); if (toks[id]._pc !== want) { toks[id]._pc = want; toks[id].innerHTML = want; }
       toks[id].classList.toggle('gone', !!p.bankrupt);
       toks[id].classList.toggle('jailed', !!p.jail);
       toks[id].classList.toggle('up', g.cur === id && !p.bankrupt && s.phase !== 'gameOver' && s.phase !== 'rolloff');
@@ -850,7 +854,7 @@
         return '<i class="' + sp.t + (pr.m ? ' m' : '') + '" style="' + (col ? 'background:' + col : '') + '" title="' + esc(s.names[k]) + '">' + (pr.h === 5 ? '<small>H</small>' : pr.h ? '<small>' + pr.h + '</small>' : '') + '</i>';
       }).join('');
       return '<div class="plate' + cls + '" data-key="pl' + p.id + '" style="--c1:' + c[0] + ';--c2:' + c[1] + '">' +
-        '<div class="row"><span class="tk">' + esc(p.piece) + '</span><span class="nm">' + esc(p.name) + (p.bot ? ' <small style="font-size:14px;letter-spacing:.14em;color:#8fc4a9">BOT</small>' : '') + '</span><span class="cash" data-key="cash' + p.id + '" data-live>' + money(me.cash || 0) + '</span></div>' +
+        '<div class="row"><span class="tk">' + F.pieceHtml(p) + '</span><span class="nm">' + esc(p.name) + (p.bot ? ' <small style="font-size:14px;letter-spacing:.14em;color:#8fc4a9">BOT</small>' : '') + '</span><span class="cash" data-key="cash' + p.id + '" data-live>' + money(me.cash || 0) + '</span></div>' +
         '<div class="sub"><span>' + esc(s.names[me.pos] || '') + (me.jail ? ' <span class="badge">IN JAIL</span>' : '') + (me.cards ? ' <span class="badge card">' + me.cards + ' JAIL CARD' + (me.cards > 1 ? 'S' : '') + '</span>' : '') + '</span><span>NET ' + money(me.net || 0) + '</span></div>' +
         '<div class="props">' + props + '</div></div>';
     }).join('');
@@ -1012,7 +1016,7 @@
     $('#winName').textContent = w ? w.name : 'NOBODY';
     F.fit($('#winName'));
     $('#winScore').textContent = w ? money(w.net) + ' NET WORTH' : '';
-    $('#winAll').innerHTML = rk.map(function (r) { var c = colorOf(idxOf(r.id)); return '<div style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="pl">' + r.place + '.</span><span class="nm">' + esc(pieceOf(r.id) + ' ' + r.name) + '</span><span class="nt">' + (r.out ? (r.left ? 'LEFT' : 'BANKRUPT') : money(r.net)) + (r.out ? '<small>' + (r.out === 1 ? 'FIRST OUT' : 'OUT #' + r.out) + '</small>' : '<small>' + money(r.cash) + ' CASH</small>') + '</span></div>'; }).join('');
+    $('#winAll').innerHTML = rk.map(function (r) { var c = colorOf(idxOf(r.id)); return '<div style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="pl">' + r.place + '.</span><span class="nm">' + pieceOf(r.id, true) + ' ' + esc(r.name) + '</span><span class="nt">' + (r.out ? (r.left ? 'LEFT' : 'BANKRUPT') : money(r.net)) + (r.out ? '<small>' + (r.out === 1 ? 'FIRST OUT' : 'OUT #' + r.out) + '</small>' : '<small>' + money(r.cash) + ' CASH</small>') + '</span></div>'; }).join('');
     $('#winAwards').innerHTML = (g.awards || []).map(function (a) { return '<div class="aw ' + a.key + '"><small>' + esc(a.title) + '</small><b>' + esc(a.name) + '</b><i>' + esc(a.note) + '</i></div>'; }).join('');
     document.querySelectorAll('#winAwards b').forEach(function (n) { F.fit(n); });
     $('#winNext').textContent = 'Play again from this computer, or ' + nameOf(s.captain) + ' can from their phone.';

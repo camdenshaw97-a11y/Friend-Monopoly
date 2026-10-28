@@ -90,3 +90,7 @@
 .dlg-btn.pri { color: #2a1800; background: linear-gradient(#ffe27a, #f2b01e); box-shadow: 0 5px 0 #8a5200; }
 .dlg-btn.red { background: linear-gradient(#ff6a60, #c41410); box-shadow: 0 5px 0 #5a0905; }
 .dlg-btn.ghost { background: transparent; box-shadow: inset 0 0 0 2px #3d9a6f; }
+
+/* ------------------------------------------------------------ photo pieces */
+img.pc { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+img.pc-in { display: inline-block; width: 1.15em; height: 1.15em; border-radius: 50%; object-fit: cover; vertical-align: -.2em; }
