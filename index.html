@@ -105,7 +105,28 @@
   .clock.hot i { background: #ff6a60; }
   .secs { text-align: center; font: 400 44px/1 var(--display); color: #fff; margin-top: 8px; }
   .secs.hot { color: #ff8a80; animation: breathe 1s ease-in-out infinite; }
-  .roll { display: block; width: min(64vw, 240px); aspect-ratio: 1; margin: 16px auto 10px; border-radius: 50%; border: 0; font: 400 50px var(--display); letter-spacing: .05em; color: #2a1800; background: radial-gradient(circle at 40% 30%, #fff3b0, #ffcc33 45%, #c98a06); box-shadow: 0 12px 0 #6b3d00, 0 0 0 8px #ffffff22, 0 24px 40px #0009; transition: transform .07s, box-shadow .07s; touch-action: manipulation; animation: rollGlow 1.8s ease-in-out infinite; }
+  .card.main { height: 430px; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .card.main > * { flex: none; }
+  .card.main > :first-child { margin-top: auto; } .card.main > :last-child { margin-bottom: auto; }
+  .card.main .say { padding-top: 4px; }
+  .card.main .say b { font-size: 30px; }
+  .card.main .say span { margin-top: 6px; }
+  .card.main .note { margin-top: 8px; }
+  .card.main .ranks { overflow: visible; }
+  .mini { background: #fff; color: #1b1b1b; border-radius: 14px; overflow: hidden; margin: 8px 0 4px; box-shadow: 0 6px 16px #0006; }
+  .mini .hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 14px 7px; font: 400 20px/1.1 var(--display); letter-spacing: .05em; }
+  .mini .hd small { font: 700 10px var(--text); letter-spacing: .12em; opacity: .85; display: block; }
+  .mini .hd button { border: 0; border-radius: 999px; background: #0003; color: inherit; font: 700 12px var(--text); padding: 6px 10px; flex: none; }
+  .mini .gr { display: grid; grid-template-columns: 1fr 1fr; }
+  .mini .gr div { padding: 7px 14px; border-top: 1px solid #0001; font: 600 12px var(--text); color: #555; }
+  .mini .gr div:nth-child(odd) { border-right: 1px solid #0001; }
+  .mini .gr b { display: block; font: 800 16px var(--letter); color: #1b1b1b; }
+  .card.main .bids { margin-top: 8px; }
+  .card.main .custom { margin-top: 10px; }
+  .card.main .custom .btn { padding: 10px 14px 8px; font-size: 20px; }
+  .card.main .custom input { padding: 10px 12px; font-size: 18px; }
+  .card.main .secs { font-size: 34px; margin-top: 0; }
+  .roll { display: block; width: min(52vw, 210px); aspect-ratio: 1; margin: 12px auto 8px; border-radius: 50%; border: 0; font: 400 50px var(--display); letter-spacing: .05em; color: #2a1800; background: radial-gradient(circle at 40% 30%, #fff3b0, #ffcc33 45%, #c98a06); box-shadow: 0 12px 0 #6b3d00, 0 0 0 8px #ffffff22, 0 24px 40px #0009; transition: transform .07s, box-shadow .07s; touch-action: manipulation; animation: rollGlow 1.8s ease-in-out infinite; }
   @keyframes rollGlow { 50% { box-shadow: 0 12px 0 #6b3d00, 0 0 0 14px #ffcc3333, 0 24px 40px #0009; } }
   .roll:active, .roll[data-fx-press] { transform: translateY(9px); box-shadow: 0 3px 0 #6b3d00, 0 0 0 8px #ffffff22; }
   .roll:disabled { filter: grayscale(.9) brightness(.6); animation: none; }
@@ -534,10 +555,20 @@
     return h;
   }
 
+  // A short version of the property card that fits in the top card; "Full card" opens the whole thing.
+  function miniDeed(i, short) {
+    var sp = B.LAYOUT[i], col = colOf(i), ink = sp.t === 'prop' ? B.GROUPS[sp.g].ink : '#fff', cells;
+    if (sp.t === 'prop') cells = [['Rent', money(sp.rent[0])], ['With the set', money(sp.rent[0] * 2)], ['Hotel rent', money(sp.rent[5])], ['Houses', money(sp.house) + ' each']];
+    else if (sp.t === 'rail') cells = [['Rent, 1 owned', '$25'], ['All 4 owned', '$200'], ['Price', money(sp.price)], ['Mortgage', money(sp.price / 2)]];
+    else cells = [['Rent, 1 owned', '4 × dice'], ['Both owned', '10 × dice'], ['Price', money(sp.price)], ['Mortgage', money(sp.price / 2)]];
+    return '<div class="mini"><div class="hd" style="background:' + col + ';color:' + ink + '"><span><small>' + esc(sp.t === 'prop' ? B.GROUPS[sp.g].name : sp.t === 'rail' ? S.rails : 'Utility') + (short ? ' · list price ' + money(sp.price) : '') + '</small>' + esc(nameOfSpace(i)) + '</span><button data-a="sheet" data-i="' + i + '">Full card ›</button></div>' + (short ? '' : '<div class="gr">' + cells.map(function (c) { return '<div>' + esc(c[0]) + '<b>' + esc(c[1]) + '</b></div>'; }).join('') + '</div>') + '</div>';
+  }
+
   function renderPlay(has) {
     var g = G(), c = colorOf(me.id);
     var h = '<div class="top" style="--c1:' + c[0] + ';--c2:' + c[1] + '"><span class="tk">' + esc(me.piece || '') + '</span><div class="nm">' + esc(me.name) + '<small>' + (me.bankrupt ? 'BANKRUPT' : esc(nameOfSpace(me.pos)) + (me.jail ? ' · IN JAIL' : '')) + '</small></div><div class="money"><span data-key="myCash" data-live>' + money(me.cash) + '</span><small>NET ' + money((g.players[me.id] || {}).net || 0) + '</small></div></div>';
-    h += mainCard(has);
+    // The top card is always the same height, so the tabs and buttons below never move.
+    h += mainCard(has).replace('<div class="card', '<div class="card main');
     h += tabs();
     h += '<a class="link leaveLink" href="#" data-a="leave">' + (S.phase === 'gameOver' || me.bankrupt ? 'Leave this room' : 'Leave the game') + '</a>';
     F.morph($('#play'), h);
@@ -563,21 +594,20 @@
     }
     if (me.offer != null) {
       var sp = B.LAYOUT[me.offer];
-      h = '<div class="card mine" data-key="main"><div class="say"><b>' + esc(nameOfSpace(me.offer)) + '</b><span>You landed here. Buy it for ' + money(sp.price) + ', or let it go to auction.</span></div>' + deed(me.offer);
+      h = '<div class="card mine" data-key="main"><div class="say"><b>' + esc(nameOfSpace(me.offer)) + '</b><span>Buy it for ' + money(sp.price) + ', or send it to auction.</span></div>' + miniDeed(me.offer);
       h += '<div class="row2"><button class="btn gold" data-a="buy"' + (me.cash < sp.price ? ' disabled' : '') + '>Buy ' + money(sp.price) + '</button><button class="btn ghost" data-a="decline">Auction it</button></div>';
       if (me.cash < sp.price) h += '<p class="note">You have ' + money(me.cash) + '. Mortgage something first if you want it.</p>';
       return h + clockHtml() + '</div>';
     }
     if (S.phase === 'auction' && g.auction) {
       var a = g.auction, top = a.bid, mineTop = a.bidder === me.id, passed = !me.inAuction;
-      h = '<div class="card' + (mineTop ? ' mine' : '') + '" data-key="main"><div class="say"><b>AUCTION</b><span>' + esc(nameOfSpace(a.space)) + ' · ' + (a.bidder ? 'high bid ' + money(a.bid) + ' from ' + (mineTop ? 'you' : esc(pname(a.bidder))) : 'no bids yet') + '</span></div>' + secsHtml() + deed(a.space);
+      h = '<div class="card' + (mineTop ? ' mine' : '') + '" data-key="main"><div class="say"><b>AUCTION</b><span>' + (a.bidder ? 'High bid ' + money(a.bid) + ' from ' + (mineTop ? 'you' : esc(pname(a.bidder))) : 'No bids yet') + '</span></div>' + secsHtml() + miniDeed(a.space, true);
       if (passed) h += '<p class="note">You passed on this one.</p>';
       else if (mineTop) h += '<p class="note">You’re the high bidder. Hold tight.</p>';
       else {
         var steps = [top + 10, top + 50, top + 100].map(function (v) { return Math.max(v, 10); });
         h += '<div class="bids">' + steps.map(function (v) { return '<button class="btn gold" data-a="bid" data-v="' + v + '"' + (v > me.cash ? ' disabled' : '') + '>' + money(v) + '</button>'; }).join('') + '</div>';
-        h += '<div class="custom"><input id="bidIn" data-key="bidIn" type="number" inputmode="numeric" placeholder="Any amount up to ' + money(me.cash) + '"><button class="btn blue" data-a="bidCustom">Bid</button></div>';
-        h += '<button class="btn ghost sm" data-a="pass">Pass</button>';
+        h += '<div class="custom"><input id="bidIn" data-key="bidIn" type="number" inputmode="numeric" placeholder="Up to ' + money(me.cash) + '"><button class="btn blue" data-a="bidCustom">Bid</button><button class="btn ghost" data-a="pass">Pass</button></div>';
       }
       return h + clockHtml() + '</div>';
     }

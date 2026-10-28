@@ -6,6 +6,17 @@ glance which version a screen is running.
 
 Times are Pacific.
 
+## 1.5 · October 27, 2026
+
+**The phone's buttons stay put**
+- The top card on the phone (Your turn, Buy, Auction, You owe, Chance, waiting) is now always
+  the same height, so the tabs and everything under them never jump around between turns and
+  nobody taps the wrong thing.
+- To fit, buying and auctions show a short version of the property card (rent, rent with the
+  set, hotel rent, house price). **Full card ›** opens the whole thing. The auction's countdown
+  sits under the high bid, and Pass is next to Bid.
+- The ROLL button is a little smaller to make room.
+
 ## 1.4 · October 26, 2026
 
 **Leaving mid-game**
